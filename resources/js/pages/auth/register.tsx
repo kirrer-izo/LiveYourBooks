@@ -89,14 +89,14 @@ export default function Register() {
 
                 )}
             </Form>
-            </div>
-            </div>
                         <div className="text-center text-sm text-muted-foreground">
                         
                             <TextLink className="text-sm text-indigo-600 hover:text-indigo-500" href={login()} tabIndex={6}>
                              Already have an account?   Log in
                             </TextLink>
                         </div>
+            </div>
+            </div>
                     
                 </>
  
