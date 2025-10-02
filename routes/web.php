@@ -9,12 +9,13 @@ Route::get('/', function () {
 
 Route::get('/dashboard', fn() => Inertia::render('Dashboard'))->name('dashboard');
 Route::get('/books', fn() => Inertia::render('Books/Index'))->name('books');
-Route::get('/mentors', fn() => Inertia::render('Mentors'))->name('mentors');
-Route::get('/tasks', fn() => Inertia::render('Tasks'))->name('tasks');
-Route::get('/habits', fn() => Inertia::render('Habits'))->name('habits');
-Route::get('/journals', fn() => Inertia::render('Journals'))->name('journals');
-Route::get('/analytics', fn() => Inertia::render('Analytics'))->name('analytics');
-Route::get('/profile', fn() => Inertia::render('Profile'))->name('profile');
+Route::get('/books/create', fn() => Inertia::render('Books/Create'))->name('books.create');
+Route::get('/mentors', fn() => Inertia::render('Mentors/Index'))->name('mentors');
+Route::get('/tasks', fn() => Inertia::render('Tasks/Index'))->name('tasks');
+Route::get('/habits', fn() => Inertia::render('Habits/Index'))->name('habits');
+Route::get('/journals', fn() => Inertia::render('Journals/Index'))->name('journals');
+Route::get('/analytics', fn() => Inertia::render('Analytics/Index'))->name('analytics');
+Route::get('/profile', fn() => Inertia::render('Profile/Index'))->name('profile');
 
 Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('dashboard', function () {

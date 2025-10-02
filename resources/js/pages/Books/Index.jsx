@@ -1,17 +1,17 @@
 import React from "react";
 import AppLayout from "../../layouts/AppLayout";
-import { Head } from "@inertiajs/react";
+import { Head, Link } from "@inertiajs/react";
 
 const Index = () => {
     const books = [
-  { id: 1, title: "Atomic Habits", author: "James Clear", progress: 75 },
-  { id: 2, title: "Deep Work", author: "Cal Newport", progress: 30 },
-  { id: 3, title: "The Power of Now", author: "Eckhart Tolle", progress: 100 },
+  { id: 1, title: "Atomic Habits", author: "James Clear", progress: 75, genre: "Self-Help", lifeArea: "Discipline"},
+  { id: 2, title: "Deep Work", author: "Cal Newport", progress: 30, genre: "Productivity", lifeArea: "Work"},
+  { id: 3, title: "The Power of Now", author: "Eckhart Tolle", progress: 100, genre: "Spirituality", lifeArea: "Mindfulness"},
 ];
-                const [searchTerm, setSearchTerm] = React.useState('');
+            const [searchTerm, setSearchTerm] = React.useState('');
             const [filter, setFilter] = React.useState('all');
             const [showAddBookModal, setShowAddBookModal] = React.useState(false);
-
+            const [category, setCategory] = React.useState('all');
             const filteredBooks = books.filter(book => {
                 const matchesSearch = book.title.toLowerCase().includes(searchTerm.toLowerCase()) || 
                                      book.author.toLowerCase().includes(searchTerm.toLowerCase());
@@ -48,12 +48,28 @@ const Index = () => {
                                 <option value="reading">Currently Reading</option>
                                 <option value="completed">Completed</option>
                             </select>
-                            <button
-                                onClick={() => setShowAddBookModal(true)}
+                            <select
+              className="border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+              value={category}
+              onChange={(e) => setCategory(e.target.value)}
+            >
+              <option value="all">All Categories</option>
+              <option value="Self-help">Self-help</option>
+              <option value="Productivity">Productivity</option>
+              <option value="Spirituality">Spirituality</option>
+              <option value="Discipline">Discipline</option>
+              <option value="Work">Work</option>
+              <option value="Mindfulness">Mindfulness</option>
+              <option value="James Clear">James Clear</option>
+              <option value="Cal Newport">Cal Newport</option>
+              <option value="Eckhart Tolle">Eckhart Tolle</option>
+            </select>
+                            <Link
+                                href="/books/create"
                                 className="px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500"
                             >
                                 Add Book
-                            </button>
+                            </Link>
                         </div>
                     </div>
                                         {filteredBooks.length === 0 ? (
