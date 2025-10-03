@@ -9,4 +9,16 @@ class MentorMessage extends Model
 {
     /** @use HasFactory<\Database\Factories\MentorMessageFactory> */
     use HasFactory;
+
+    protected $fillable = [
+        'mentor_id',
+        'sender',
+        'message',
+        'meta',
+    ];
+
+    public function mentor()
+    {
+        return $this->belongsTo(Mentor::class);
+    }
 }
