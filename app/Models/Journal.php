@@ -9,4 +9,17 @@ class Journal extends Model
 {
     /** @use HasFactory<\Database\Factories\JournalFactory> */
     use HasFactory;
+
+    protected $fillable = [
+        'user_id',
+        'title',
+        'content',
+        'tags',
+        'entry_date'
+    ];
+
+    public function user()
+    {
+        return $this->belongsTo(User::class);
+    }
 }
