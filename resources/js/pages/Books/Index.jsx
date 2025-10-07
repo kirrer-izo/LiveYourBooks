@@ -2,31 +2,39 @@ import React from "react";
 import AppLayout from "../../layouts/AppLayout";
 import { Head, Link } from "@inertiajs/react";
 
-const Index = () => {
-    const books = [
-  { id: 1, title: "Atomic Habits", author: "James Clear", progress: 75, genre: "Self-Help", lifeArea: "Discipline"},
-  { id: 2, title: "Deep Work", author: "Cal Newport", progress: 30, genre: "Productivity", lifeArea: "Work"},
-  { id: 3, title: "The Power of Now", author: "Eckhart Tolle", progress: 100, genre: "Spirituality", lifeArea: "Mindfulness"},
-];
-            const [searchTerm, setSearchTerm] = React.useState('');
-            const [filter, setFilter] = React.useState('all');
-            const [showAddBookModal, setShowAddBookModal] = React.useState(false);
-            const [category, setCategory] = React.useState('all');
-            const filteredBooks = books.filter(book => {
-                const matchesSearch = book.title.toLowerCase().includes(searchTerm.toLowerCase()) || 
-                                     book.author.toLowerCase().includes(searchTerm.toLowerCase());
-                const matchesFilter = filter === 'all' || 
-                                    (filter === 'reading' && book.progress < 100) || 
-                                    (filter === 'completed' && book.progress === 100);
-                return matchesSearch && matchesFilter;
-            });
+
+const Index = ({books}) => {
+
+//     const books = [
+//   { id: 1, title: "Atomic Habits", author: "James Clear", progress: 75, genre: "Self-Help", lifeArea: "Discipline"},
+//   { id: 2, title: "Deep Work", author: "Cal Newport", progress: 30, genre: "Productivity", lifeArea: "Work"},
+//   { id: 3, title: "The Power of Now", author: "Eckhart Tolle", progress: 100, genre: "Spirituality", lifeArea: "Mindfulness"},
+// ];
+    const list = Array.isArray(books?.data) ? books.data : [];
+    const links = books?.links || [];
+    
+    const [searchTerm, setSearchTerm] = React.useState('');
+    const [filter, setFilter] = React.useState('all');
+    const [showAddBookModal, setShowAddBookModal] = React.useState(false);
+    const [category, setCategory] = React.useState('all');
+    const filteredBooks = list.filter(book => {
+        const matchesSearch = book.title.toLowerCase().includes(searchTerm.toLowerCase()) || 
+                                book.author.toLowerCase().includes(searchTerm.toLowerCase());
+        const matchesFilter = filter === 'all' || 
+                            (filter === 'reading' && book.progress < 100) || 
+                            (filter === 'completed' && book.progress === 100);
+        return matchesSearch && matchesFilter;
+    });
+
+
+
             
     return (
         <>
         <Head title="Books - Live Your Books" />
         <h1> Books </h1>
         <div className="fade-up">
-                            <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-6">
+                    <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-6">
                         <h2 className="text-2xl font-bold mb-4 md:mb-0">My Books</h2>
                         <div className="flex flex-col space-y-2 sm:flex-row sm:space-y-0 sm:space-x-2">
                             <div className="relative">
@@ -72,23 +80,23 @@ const Index = () => {
                             </Link>
                         </div>
                     </div>
-                                        {filteredBooks.length === 0 ? (
+                        {list.length === 0 ? (
                         <div className="bg-white p-8 rounded-lg shadow-sm border border-gray-100 text-center">
                             <i data-feather="book" className="w-12 h-12 mx-auto text-gray-400"></i>
                             <h3 className="mt-4 text-lg font-medium text-gray-900">No books found</h3>
                             <p className="mt-1 text-gray-500">Try adjusting your search or add a new book</p>
-                            <button
-                                onClick={() => setShowAddBookModal(true)}
+                            <Link
+                                href="/books/create"
                                 className="mt-4 px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700"
                             >
                                 Add Book
-                            </button>
+                            </Link>
                         </div>
                     ) : (
                         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-                            {filteredBooks.map(book => (
+                            {list.map(book => (
                                 <div key={book.id} className="bg-white rounded-lg shadow-sm border border-gray-100 overflow-hidden hover:shadow-md transition-shadow">
-                                    <img src={book.cover} alt={book.title} className="w-full h-48 object-cover" />
+                                    <img src={book.cover_img} alt={book.title} className="w-full h-48 object-cover" />
                                     <div className="p-4">
                                         <h3 className="font-semibold text-lg">{book.title}</h3>
                                         <p className="text-gray-600 text-sm">{book.author}</p>
@@ -117,6 +125,30 @@ const Index = () => {
                             ))}
                         </div>
                     )}
+
+                    <div className="mt-6 flex justify-center space-x-2">
+                        {links.map(link => 
+                            link.url ? (
+                                <Link
+                                key={link.label}
+                                href={link.url}
+                                dangerouslySetInnerHTML={{ __html: link.label }}
+                                className={`px-3 py-1 rounded border text-sm transition ${
+                                    link.active
+                                    ? 'bg-indigo-600 text-white border-indigo-600'
+                                : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-100'
+                                }`}
+                                />
+                            
+                        ): (
+                            <span
+                            key={link.label}
+                            dangerouslySetInnerHTML={{ __html: link.label }}
+                            className="px-3 py-1 rounded border text-sm bg-white text-gray-400 border-gray-300"
+                            />
+                        )
+                        )}
+                    </div>
 
         </div>
         </>

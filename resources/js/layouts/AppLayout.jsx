@@ -72,7 +72,7 @@ export default function AppLayout({ children }) {
           <header className="bg-white shadow-sm sticky top-0 z-10">
             <div className="flex items-center justify-between p-4">
               <h2 className="text-xl font-semibold capitalize">
-                {url.replace("/", "") || "dashboard"}
+                {url.split("/") [1]?.split("?")[0] || "dashboard"}
               </h2>
               <div className="flex items-center space-x-4">
                 <button className="p-2 rounded-full hover:bg-gray-100">
