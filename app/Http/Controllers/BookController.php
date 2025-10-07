@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Book;
 use App\Http\Requests\StoreBookRequest;
 use App\Http\Requests\UpdateBookRequest;
+use Illuminate\Support\Facades\Auth;
 
 class BookController extends Controller
 {
@@ -13,7 +14,10 @@ class BookController extends Controller
      */
     public function index()
     {
-        //
+        $books = Book::where('user_id', Auth::id())
+        ->paginate(10);
+
+        return inertia('Books/Index', ['books' => $books]);
     }
 
     /**
@@ -21,7 +25,7 @@ class BookController extends Controller
      */
     public function create()
     {
-        //
+        return inertia('Books/Create');
     }
 
     /**

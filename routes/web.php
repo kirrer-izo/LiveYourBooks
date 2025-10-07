@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\BookController;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 
@@ -8,8 +9,8 @@ Route::get('/', function () {
 })->name('home');
 
 Route::get('/dashboard', fn() => Inertia::render('Dashboard'))->name('dashboard');
-Route::get('/books', fn() => Inertia::render('Books/Index'))->name('books');
-Route::get('/books/create', fn() => Inertia::render('Books/Create'))->name('books.create');
+// Route::get('/books', fn() => Inertia::render('Books/Index'))->name('books');
+// Route::get('/books/create', fn() => Inertia::render('Books/Create'))->name('books.create');
 Route::get('/mentors', fn() => Inertia::render('Mentors/Index'))->name('mentors');
 Route::get('/tasks', fn() => Inertia::render('Tasks/Index'))->name('tasks');
 Route::get('/habits', fn() => Inertia::render('Habits/Index'))->name('habits');
@@ -21,6 +22,8 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('dashboard', function () {
         return Inertia::render('dashboard');
     })->name('dashboard');
+    
+    Route::resource('books', BookController::class);
 });
 
 
