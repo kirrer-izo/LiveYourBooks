@@ -34,9 +34,9 @@ class Book extends Model
         return $this->hasMany(Habit::class);
     }
 
-    public function mentors(): HasOne
+    public function mentors(): HasMany
     {
-        return $this->hasOne(Mentor::class);
+        return $this->hasMany(Mentor::class);
     }
 
     public function tasks(): HasMany

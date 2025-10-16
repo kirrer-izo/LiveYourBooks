@@ -23,7 +23,20 @@ Route::get('/profile', fn() => Inertia::render('Profile/Index'))->name('profile'
 // AI Chat endpoint
 Route::post('/api/mentor-chat', [AIChatController::class, 'chat'])
     ->name('mentor.chat')
+    ->withoutMiddleware([\App\Http\Middleware\VerifyCsrfToken::class])
     ->middleware('throttle:60,1');
+
+// Conversations APIs
+Route::middleware(['auth'])->group(function () {
+    Route::get('/api/conversations', [AIChatController::class, 'conversations'])
+        ->name('conversations.list')
+        ->withoutMiddleware([\App\Http\Middleware\VerifyCsrfToken::class])
+        ->middleware('throttle:120,1');
+    Route::get('/api/conversations/{id}', [AIChatController::class, 'conversation'])
+        ->name('conversations.show')
+        ->withoutMiddleware([\App\Http\Middleware\VerifyCsrfToken::class])
+        ->middleware('throttle:120,1');
+});
 
 Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('dashboard', function () {
@@ -31,6 +44,23 @@ Route::middleware(['auth', 'verified'])->group(function () {
     })->name('dashboard');
     
     Route::resource('books', BookController::class);
+    Route::get('/mentor/chat', function () {
+        $books = \App\Models\Book::where('user_id', \Illuminate\Support\Facades\Auth::id())
+            ->select('id','title','author')
+            ->orderBy('title')
+            ->get();
+        $mentorNames = \App\Models\Book::where('user_id', \Illuminate\Support\Facades\Auth::id())
+            ->whereNotNull('author')
+            ->where('author', '!=', '')
+            ->select('author')
+            ->distinct()
+            ->orderBy('author')
+            ->pluck('author');
+        return Inertia::render('Mentor/Chat', [
+            'books' => $books,
+            'mentors' => $mentorNames,
+        ]);
+    })->name('mentor.chat.ui');
 });
 
 
