@@ -1,6 +1,8 @@
 <?php
 
 use App\Http\Controllers\BookController;
+use App\Http\Controllers\AIChatController;
+use App\Http\Controllers\MentorController;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 
@@ -11,12 +13,17 @@ Route::get('/', function () {
 Route::get('/dashboard', fn() => Inertia::render('Dashboard'))->name('dashboard');
 // Route::get('/books', fn() => Inertia::render('Books/Index'))->name('books');
 // Route::get('/books/create', fn() => Inertia::render('Books/Create'))->name('books.create');
-Route::get('/mentors', fn() => Inertia::render('Mentors/Index'))->name('mentors');
+
 Route::get('/tasks', fn() => Inertia::render('Tasks/Index'))->name('tasks');
 Route::get('/habits', fn() => Inertia::render('Habits/Index'))->name('habits');
 Route::get('/journals', fn() => Inertia::render('Journals/Index'))->name('journals');
 Route::get('/analytics', fn() => Inertia::render('Analytics/Index'))->name('analytics');
 Route::get('/profile', fn() => Inertia::render('Profile/Index'))->name('profile');
+
+// AI Chat endpoint
+Route::post('/api/mentor-chat', [AIChatController::class, 'chat'])
+    ->name('mentor.chat')
+    ->middleware('throttle:60,1');
 
 Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('dashboard', function () {
@@ -29,3 +36,4 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
 require __DIR__.'/settings.php';
 require __DIR__.'/auth.php';
+

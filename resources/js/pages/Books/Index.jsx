@@ -1,9 +1,9 @@
 import React from "react";
 import AppLayout from "../../layouts/AppLayout";
-import { Head, Link } from "@inertiajs/react";
+import { Head, Link, router } from "@inertiajs/react";
 
 
-const Index = ({books}) => {
+const Index = ({books, filters, genres = [], lifeAreas = []}) => {
 
 //     const books = [
 //   { id: 1, title: "Atomic Habits", author: "James Clear", progress: 75, genre: "Self-Help", lifeArea: "Discipline"},
@@ -13,18 +13,26 @@ const Index = ({books}) => {
     const list = Array.isArray(books?.data) ? books.data : [];
     const links = books?.links || [];
     
-    const [searchTerm, setSearchTerm] = React.useState('');
-    const [filter, setFilter] = React.useState('all');
+    const [searchTerm, setSearchTerm] = React.useState(filters?.q || '');
+    const [filter, setFilter] = React.useState(filters?.status || 'all');
     const [showAddBookModal, setShowAddBookModal] = React.useState(false);
-    const [category, setCategory] = React.useState('all');
-    const filteredBooks = list.filter(book => {
-        const matchesSearch = book.title.toLowerCase().includes(searchTerm.toLowerCase()) || 
-                                book.author.toLowerCase().includes(searchTerm.toLowerCase());
-        const matchesFilter = filter === 'all' || 
-                            (filter === 'reading' && book.progress < 100) || 
-                            (filter === 'completed' && book.progress === 100);
-        return matchesSearch && matchesFilter;
-    });
+    const [category, setCategory] = React.useState(filters?.category || 'all');
+    const categories = React.useMemo(() => ['all', ...genres, ...lifeAreas], [genres, lifeAreas]);
+
+    // Push query params to backend when filters change
+    React.useEffect(() => {
+        const urlParams = new URLSearchParams(window.location.search);
+        const currentPage = urlParams.get('page');
+        const params = {
+            q: searchTerm || undefined,
+            status: filter !== 'all' ? filter : undefined,
+            category: category !== 'all' ? category : undefined,
+            page: currentPage || undefined,
+        };
+        router.get('/books', params, { preserveState: true, replace: true, preserveScroll: true });
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [searchTerm, filter, category]);
+    const filteredBooks = list;
 
 
 
@@ -61,16 +69,9 @@ const Index = ({books}) => {
               value={category}
               onChange={(e) => setCategory(e.target.value)}
             >
-              <option value="all">All Categories</option>
-              <option value="Self-help">Self-help</option>
-              <option value="Productivity">Productivity</option>
-              <option value="Spirituality">Spirituality</option>
-              <option value="Discipline">Discipline</option>
-              <option value="Work">Work</option>
-              <option value="Mindfulness">Mindfulness</option>
-              <option value="James Clear">James Clear</option>
-              <option value="Cal Newport">Cal Newport</option>
-              <option value="Eckhart Tolle">Eckhart Tolle</option>
+              {categories.map((c) => (
+                <option key={c} value={c}>{c === 'all' ? 'All Categories' : c}</option>
+              ))}
             </select>
                             <Link
                                 href="/books/create"
@@ -80,7 +81,7 @@ const Index = ({books}) => {
                             </Link>
                         </div>
                     </div>
-                        {list.length === 0 ? (
+                        {filteredBooks.length === 0 ? (
                         <div className="bg-white p-8 rounded-lg shadow-sm border border-gray-100 text-center">
                             <i data-feather="book" className="w-12 h-12 mx-auto text-gray-400"></i>
                             <h3 className="mt-4 text-lg font-medium text-gray-900">No books found</h3>
@@ -94,9 +95,26 @@ const Index = ({books}) => {
                         </div>
                     ) : (
                         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-                            {list.map(book => (
+                            {filteredBooks.map(book => (
                                 <div key={book.id} className="bg-white rounded-lg shadow-sm border border-gray-100 overflow-hidden hover:shadow-md transition-shadow">
-                                    <img src={book.cover_img} alt={book.title} className="w-full h-48 object-cover" />
+                                    {book.cover_is_pdf ? (
+                                      <div className="w-full h-48 flex items-center justify-center bg-gray-50 border-b">
+                                        <a
+                                          href={book.cover_url}
+                                          target="_blank"
+                                          rel="noopener noreferrer"
+                                          className="text-indigo-600 hover:underline"
+                                        >
+                                          Open PDF
+                                        </a>
+                                      </div>
+                                    ) : book.cover_img ? (
+                                      <img src={book.cover_img} alt={book.title} className="w-full h-48 object-cover" />
+                                    ) : (
+                                      <div className="w-full h-48 flex items-center justify-center bg-gray-100 text-gray-500 border-b">
+                                        No Cover
+                                      </div>
+                                    )}
                                     <div className="p-4">
                                         <h3 className="font-semibold text-lg">{book.title}</h3>
                                         <p className="text-gray-600 text-sm">{book.author}</p>

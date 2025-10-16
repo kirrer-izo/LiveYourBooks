@@ -1,62 +1,104 @@
 import React from "react";
 import AppLayout from "../../layouts/AppLayout";
-import { Head } from "@inertiajs/react";
+import { Head, router, usePage, Link } from "@inertiajs/react";
 
 const Index = () => {
-  // Example data
-  const books = [
-    { id: 1, title: "Atomic Habits", author: "James Clear" },
-    { id: 2, title: "Deep Work", author: "Cal Newport" },
-    { id: 3, title: "The Power of Now", author: "Eckhart Tolle" },
-  ];
+  const { props } = usePage();
+  const books = Array.isArray(props.books) ? props.books : [];
+  const authors = Array.isArray(props.authors) ? props.authors : [];
+  const initialBookId = props.selectedBookId || (books[0]?.id ?? null);
 
-  const mentors = [
-    { id: "james-clear", name: "James Clear" },
-    { id: "cal-newport", name: "Cal Newport" },
-    { id: "eckhart-tolle", name: "Eckhart Tolle" },
-  ];
-
-  const [selectedBook, setSelectedBook] = React.useState(books[0].id);
-  const [selectedMentor, setSelectedMentor] = React.useState(mentors[0].id);
+  const [selectedBookId, setSelectedBookId] = React.useState(initialBookId);
+  const [selectedAuthor, setSelectedAuthor] = React.useState(
+    books.find(b => b.id === initialBookId)?.author || (authors[0] || "")
+  );
 
   // Load session history from localStorage
-  const storedMessages = JSON.parse(localStorage.getItem("mentorChatHistory") || "[]");
-  const [chatMessages, setChatMessages] = React.useState(storedMessages);
+  const storageKeyFor = (bookId) => `mentorChatHistory:${bookId || 'global'}`;
+  const loadHistory = (bookId) => {
+    try {
+      return JSON.parse(localStorage.getItem(storageKeyFor(bookId)) || "[]");
+    } catch {
+      return [];
+    }
+  };
+  const [chatMessages, setChatMessages] = React.useState(loadHistory(initialBookId));
 
   const [message, setMessage] = React.useState("");
+  const [loading, setLoading] = React.useState(false);
+  const [error, setError] = React.useState("");
+
+  const getCsrfToken = () => {
+    const meta = document.querySelector('meta[name="csrf-token"]');
+    return meta ? meta.getAttribute('content') : '';
+  };
 
   const handleSendMessage = (e) => {
     e.preventDefault();
     if (message.trim() === "") return;
 
+    const bookObj = books.find((b) => b.id === selectedBookId) || {};
+    const effectiveAuthor = selectedAuthor || bookObj.author || "";
+
     const newMessage = {
       id: chatMessages.length + 1,
       sender: "user",
       text: message,
-      book: books.find((b) => b.id === selectedBook).title,
-      mentor: mentors.find((m) => m.id === selectedMentor).name,
+      book: bookObj.title || "",
+      mentor: effectiveAuthor,
     };
 
     const updatedMessages = [...chatMessages, newMessage];
     setChatMessages(updatedMessages);
-    localStorage.setItem("mentorChatHistory", JSON.stringify(updatedMessages));
+    localStorage.setItem(storageKeyFor(selectedBookId), JSON.stringify(updatedMessages));
 
     setMessage("");
+    setLoading(true);
+    setError("");
 
-    // Simulate AI response in selected mentor’s voice
-    setTimeout(() => {
-      const aiResponse = {
-        id: updatedMessages.length + 1,
-        sender: "ai",
-        text: `(${mentors.find((m) => m.id === selectedMentor).name}): Great point about "${newMessage.book}". I’d recommend focusing on...`,
+    fetch("/api/mentor-chat", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "X-CSRF-TOKEN": getCsrfToken(),
+        "Accept": "application/json",
+      },
+      body: JSON.stringify({
+        message: newMessage.text,
         book: newMessage.book,
         mentor: newMessage.mentor,
-      };
+      }),
+    })
+      .then(async (res) => {
+        const data = await res.json().catch(() => ({}));
+        if (!res.ok) {
+          throw new Error(data?.error || "Request failed");
+        }
+        const reply = data?.reply || "I'm unable to respond right now.";
+        const aiResponse = {
+          id: updatedMessages.length + 1,
+          sender: "ai",
+          text: reply,
+          book: newMessage.book,
+          mentor: newMessage.mentor,
+        };
+        const updatedWithAI = [...updatedMessages, aiResponse];
+        setChatMessages(updatedWithAI);
+        localStorage.setItem(storageKeyFor(selectedBookId), JSON.stringify(updatedWithAI));
+      })
+      .catch((err) => {
+        setError(err.message || "Something went wrong");
+      })
+      .finally(() => setLoading(false));
+  };
 
-      const updatedWithAI = [...updatedMessages, aiResponse];
-      setChatMessages(updatedWithAI);
-      localStorage.setItem("mentorChatHistory", JSON.stringify(updatedWithAI));
-    }, 1000);
+  const handleBookChange = (e) => {
+    const id = e.target.value ? Number(e.target.value) : null;
+    setSelectedBookId(id);
+    // Navigate to per-book chat screen
+    if (id) {
+      router.get(`/mentors/${id}`, {}, { preserveState: false, replace: true });
+    }
   };
 
   return (
@@ -73,10 +115,10 @@ const Index = () => {
             AI Mentor
           </h2>
           <div className="flex space-x-2">
-            {/* Book selector */}
+            {/* Book selector (from DB) */}
             <select
-              value={selectedBook}
-              onChange={(e) => setSelectedBook(Number(e.target.value))}
+              value={selectedBookId ?? ''}
+              onChange={handleBookChange}
               className="border border-gray-300 rounded-md px-2 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
             >
               {books.map((book) => (
@@ -85,15 +127,15 @@ const Index = () => {
                 </option>
               ))}
             </select>
-            {/* Mentor selector */}
+            {/* Author selector (from DB) */}
             <select
-              value={selectedMentor}
-              onChange={(e) => setSelectedMentor(e.target.value)}
+              value={selectedAuthor}
+              onChange={(e) => setSelectedAuthor(e.target.value)}
               className="border border-gray-300 rounded-md px-2 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
             >
-              {mentors.map((mentor) => (
-                <option key={mentor.id} value={mentor.id}>
-                  {mentor.name}
+              {authors.map((name) => (
+                <option key={name} value={name}>
+                  {name}
                 </option>
               ))}
             </select>
@@ -120,10 +162,13 @@ const Index = () => {
                   <p className="text-xs text-gray-400 italic mb-1">
                     {msg.book} • {msg.mentor}
                   </p>
-                  <p>{msg.text}</p>
+                  <p className="whitespace-pre-wrap">{msg.text}</p>
                 </div>
               </div>
             ))
+          )}
+          {error && (
+            <p className="text-center text-red-500 mt-2">{error}</p>
           )}
         </div>
 
@@ -136,12 +181,14 @@ const Index = () => {
               onChange={(e) => setMessage(e.target.value)}
               placeholder="Ask your AI mentor a question..."
               className="flex-1 px-4 py-2 border border-gray-300 rounded-l-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
+              disabled={loading}
             />
             <button
               type="submit"
-              className="px-4 py-2 bg-indigo-600 text-white rounded-r-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+              className="px-4 py-2 bg-indigo-600 text-white rounded-r-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 disabled:opacity-50"
+              disabled={loading}
             >
-              <i data-feather="send"></i>
+              {loading ? '...' : <i data-feather="send"></i>}
             </button>
           </form>
         </div>

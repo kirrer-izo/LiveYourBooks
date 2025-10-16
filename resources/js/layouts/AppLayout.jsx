@@ -11,7 +11,7 @@ export default function AppLayout({ children }) {
   const navItems = [
     { name: "Dashboard", href: '/dashboard', icon: <Home className="mr-3" /> },
     { name: "Books", href: '/books', icon: <Book className="mr-3" /> },
-    { name: "AI Mentor", href: '/mentors', icon: <Brain className="mr-3" /> },
+    { name: "AI Mentor", href: '/mentors-chat', icon: <Brain className="mr-3" /> },
     { name: "Task Generator", href: '/tasks', icon: <BookOpenCheck className="mr-3" /> },
     { name: "Habit Tracker", href: '/habits', icon: <PersonStanding className="mr-3" /> },
     { name: "Journal", href: '/journals', icon: <Notebook className="mr-3" /> },

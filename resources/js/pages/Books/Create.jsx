@@ -2,7 +2,7 @@ import React from "react";
 import AppLayout from "../../layouts/AppLayout";
 import { Head, Link, useForm } from "@inertiajs/react";
 
-const Create = () => {
+const Create = ({ genres = [], lifeAreas = [] }) => {
     const { data, setData, post, processing, errors, reset } = useForm({
         genre: '',
         life_area: '',
@@ -46,17 +46,9 @@ const Create = () => {
                                 className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
                             >
                                 <option value="">Select a genre</option>
-                                <option value="Fiction">Fiction</option>
-                                <option value="Non-fiction">Non-fiction</option>
-                                <option value="Biography">Biography</option>
-                                <option value="Self-help">Self-help</option>
-                                <option value="Philosophy">Philosophy</option>
-                                <option value="Spirituality">Spirituality</option>
-                                <option value="Science">Science</option>
-                                <option value="History">History</option>
-                                <option value="Poetry">Poetry</option>
-                                <option value="Business">Business</option>
-                                <option value="Personal Development">Personal Development</option>
+                                {genres.map((g) => (
+                                  <option key={g} value={g}>{g}</option>
+                                ))}
                             </select>
                             {errors.genre && <p className="text-red-500 text-sm mt-1">{errors.genre}</p>}
                         </div>
@@ -68,28 +60,21 @@ const Create = () => {
                                 className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
                             >
                                 <option value="">Select a life area</option>
-                                <option value="Health">Health</option>
-                                <option value="Relationships">Relationships</option>
-                                <option value="Career">Career</option>
-                                <option value="Finance">Finance</option>
-                                <option value="Spirituality">Spirituality</option>
-                                <option value="Personal Growth">Personal Growth</option>
-                                <option value="Emotional Wellbeing">Emotional Wellbeing</option>
-                                <option value="Productivity">Productivity</option>
-                                <option value="Mindfulness">Mindfulness</option>
-                                <option value="Purpose">Purpose</option>
+                                {lifeAreas.map((l) => (
+                                  <option key={l} value={l}>{l}</option>
+                                ))}
                             </select>
                             {errors.life_area && <p className="text-red-500 text-sm mt-1">{errors.life_area}</p>}
                         </div>
                         <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-1">Book Cover Image</label>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">Book PDF</label>
                             <input 
                                 type="file" 
-                                accept="image/*"
+                                accept="application/pdf"
                                 onChange={handleFileChange}
                                 className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
                             />
-                            <p className="text-xs text-gray-500 mt-1">Upload Book. Title and author will be extracted automatically.</p>
+                            <p className="text-xs text-gray-500 mt-1">Upload a book PDF. Title and author will be extracted automatically.</p>
                             {errors.cover_img && <p className="text-red-500 text-sm mt-1">{errors.cover_img}</p>}
                         </div>
                         <div className="flex justify-end space-x-3 pt-4">

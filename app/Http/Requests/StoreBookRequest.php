@@ -24,7 +24,8 @@ class StoreBookRequest extends FormRequest
         return [
             'genre' => ['nullable', 'string', 'in:Fiction,Non-fiction,Biography,Self-help,Philosophy,Spirituality,Science,History,Poetry,Business,Personal Development'],
             'life_area' => ['nullable', 'string', 'in:Health,Relationships,Career,Finance,Spirituality,Personal Growth,Emotional Wellbeing,Productivity,Mindfulness,Purpose'],
-            'cover_img' => ['nullable', 'image', 'mimes:jpeg,png,jpg,gif', 'max:2048'],
+            
+            'cover_img' => ['required', 'file', 'mimetypes:application/pdf', 'max:16384'],
         ];
     }
 }
