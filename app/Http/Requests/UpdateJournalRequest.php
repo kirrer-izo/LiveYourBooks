@@ -11,7 +11,7 @@ class UpdateJournalRequest extends FormRequest
      */
     public function authorize(): bool
     {
-        return false;
+        return auth()->check();
     }
 
     /**
@@ -22,7 +22,21 @@ class UpdateJournalRequest extends FormRequest
     public function rules(): array
     {
         return [
-            //
+            'title' => 'required|string|max:255',
+            'content' => 'required|string|max:10000',
+            'tags' => 'nullable|array',
+            'tags.*' => 'string|max:50',
+            'entry_date' => 'required|date',
+        ];
+    }
+
+    public function messages(): array
+    {
+        return [
+            'title.required' => 'A title is required for your journal entry.',
+            'content.required' => 'Please write some content for your journal entry.',
+            'content.max' => 'Journal content cannot exceed 10,000 characters.',
+            'entry_date.required' => 'Please select a date for this entry.',
         ];
     }
 }

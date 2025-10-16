@@ -444,7 +444,23 @@ class BookController extends Controller
      */
     public function show(Book $book)
     {
-        //
+        $this->authorize('view', $book);
+        
+        // Transform cover image URL
+        if ($book->cover_img) {
+            $url = '/storage/' . ltrim($book->cover_img, '/');
+            $ext = strtolower(pathinfo($book->cover_img, PATHINFO_EXTENSION));
+            $book->cover_url = $url;
+            $book->cover_is_pdf = ($ext === 'pdf');
+            $book->cover_img = $url;
+        } else {
+            $book->cover_url = null;
+            $book->cover_is_pdf = false;
+        }
+        
+        return inertia('Books/Show', [
+            'book' => $book,
+        ]);
     }
 
     /**
@@ -452,7 +468,16 @@ class BookController extends Controller
      */
     public function edit(Book $book)
     {
-        //
+        $this->authorize('update', $book);
+        
+        $genres = array_map(fn ($c) => $c->value, Genre::cases());
+        $lifeAreas = array_map(fn ($c) => $c->value, LifeArea::cases());
+        
+        return inertia('Books/Edit', [
+            'book' => $book,
+            'genres' => $genres,
+            'lifeAreas' => $lifeAreas,
+        ]);
     }
 
     /**
@@ -460,7 +485,26 @@ class BookController extends Controller
      */
     public function update(UpdateBookRequest $request, Book $book)
     {
-        //
+        $this->authorize('update', $book);
+        
+        $validated = $request->validated();
+        
+        // Handle file upload if new cover is provided
+        if ($request->hasFile('cover_img')) {
+            // Delete old cover if exists
+            if ($book->cover_img) {
+                Storage::disk('public')->delete($book->cover_img);
+            }
+            
+            $file = $request->file('cover_img');
+            $path = $file->store('book-covers', 'public');
+            $validated['cover_img'] = $path;
+        }
+        
+        $book->update($validated);
+        
+        return redirect()->route('books.index')
+            ->with('success', 'Book updated successfully!');
     }
 
     /**
@@ -468,6 +512,16 @@ class BookController extends Controller
      */
     public function destroy(Book $book)
     {
-        //
+        $this->authorize('delete', $book);
+        
+        // Delete cover image if exists
+        if ($book->cover_img) {
+            Storage::disk('public')->delete($book->cover_img);
+        }
+        
+        $book->delete();
+        
+        return redirect()->route('books.index')
+            ->with('success', 'Book deleted successfully!');
     }
 }

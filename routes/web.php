@@ -3,6 +3,11 @@
 use App\Http\Controllers\BookController;
 use App\Http\Controllers\AIChatController;
 use App\Http\Controllers\MentorController;
+use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\JournalController;
+use App\Http\Controllers\TaskController;
+use App\Http\Controllers\HabitController;
+use App\Http\Controllers\NotificationController;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 
@@ -10,15 +15,7 @@ Route::get('/', function () {
     return Inertia::render('welcome');
 })->name('home');
 
-Route::get('/dashboard', fn() => Inertia::render('Dashboard'))->name('dashboard');
-// Route::get('/books', fn() => Inertia::render('Books/Index'))->name('books');
-// Route::get('/books/create', fn() => Inertia::render('Books/Create'))->name('books.create');
-
-Route::get('/tasks', fn() => Inertia::render('Tasks/Index'))->name('tasks');
-Route::get('/habits', fn() => Inertia::render('Habits/Index'))->name('habits');
-Route::get('/journals', fn() => Inertia::render('Journals/Index'))->name('journals');
-Route::get('/analytics', fn() => Inertia::render('Analytics/Index'))->name('analytics');
-Route::get('/profile', fn() => Inertia::render('Profile/Index'))->name('profile');
+// Public routes will be handled in auth middleware group below
 
 // AI Chat endpoint
 Route::post('/api/mentor-chat', [AIChatController::class, 'chat'])
@@ -36,14 +33,44 @@ Route::middleware(['auth'])->group(function () {
         ->name('conversations.show')
         ->withoutMiddleware([\App\Http\Middleware\VerifyCsrfToken::class])
         ->middleware('throttle:120,1');
+    Route::put('/api/conversations/{id}', [AIChatController::class, 'updateConversation'])
+        ->name('conversations.update')
+        ->withoutMiddleware([\App\Http\Middleware\VerifyCsrfToken::class])
+        ->middleware('throttle:60,1');
+    Route::delete('/api/conversations/{id}', [AIChatController::class, 'deleteConversation'])
+        ->name('conversations.delete')
+        ->withoutMiddleware([\App\Http\Middleware\VerifyCsrfToken::class])
+        ->middleware('throttle:60,1');
+
+    Route::post('/api/journals/from-reply', [AIChatController::class, 'saveJournal'])
+        ->name('journals.from_reply')
+        ->withoutMiddleware([\App\Http\Middleware\VerifyCsrfToken::class])
+        ->middleware('throttle:60,1');
+
+    Route::post('/api/tasks/from-reply', [AIChatController::class, 'tasksFromReply'])
+        ->name('tasks.from_reply')
+        ->withoutMiddleware([\App\Http\Middleware\VerifyCsrfToken::class])
+        ->middleware('throttle:60,1');
 });
 
 Route::middleware(['auth', 'verified'])->group(function () {
-    Route::get('dashboard', function () {
-        return Inertia::render('dashboard');
-    })->name('dashboard');
+    // Dashboard
+    Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
     
+    // Resource routes
     Route::resource('books', BookController::class);
+    Route::resource('journals', JournalController::class);
+    Route::resource('tasks', TaskController::class);
+    Route::resource('habits', HabitController::class);
+    
+    // Additional endpoints
+    Route::post('/tasks/{task}/toggle', [TaskController::class, 'toggle'])->name('tasks.toggle');
+    Route::post('/habits/{habit}/checkin', [HabitController::class, 'checkIn'])->name('habits.checkin');
+    
+    // Notification preferences
+    Route::get('/api/notifications/preferences', [NotificationController::class, 'getPreferences'])->name('notifications.preferences');
+    Route::post('/api/notifications/preferences', [NotificationController::class, 'updatePreferences'])->name('notifications.update_preferences');
+    // Mentor Chat UI
     Route::get('/mentor/chat', function () {
         $books = \App\Models\Book::where('user_id', \Illuminate\Support\Facades\Auth::id())
             ->select('id','title','author')
@@ -61,6 +88,10 @@ Route::middleware(['auth', 'verified'])->group(function () {
             'mentors' => $mentorNames,
         ]);
     })->name('mentor.chat.ui');
+    
+    // Analytics page
+    Route::get('/analytics', fn() => Inertia::render('Analytics/Index'))->name('analytics');
+    Route::get('/profile', fn() => Inertia::render('Profile/Index'))->name('profile');
 });
 
 

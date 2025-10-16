@@ -10,10 +10,13 @@ use App\Models\Conversation;
 use App\Models\Message;
 use App\Models\Book;
 use App\Models\Mentor;
+use App\Models\Journal;
+use App\Models\Task;
 use GuzzleHttp\Exception\TransferException;
 use GuzzleHttp\Exception\ConnectException;
 use GuzzleHttp\Exception\ClientException;
 use GuzzleHttp\Exception\ServerException;
+use Illuminate\Support\Str;
 
 class AIChatController extends Controller
 {
@@ -29,6 +32,60 @@ class AIChatController extends Controller
         return response()->json(['conversations' => $items]);
     }
 
+    public function saveJournal(Request $request)
+    {
+        $request->validate([
+            'conversation_id' => 'required|integer|exists:conversations,id',
+            'content' => 'required|string',
+            'title' => 'nullable|string',
+        ]);
+        $userId = Auth::id();
+        $conv = Conversation::where('user_id', $userId)->findOrFail($request->integer('conversation_id'));
+        $inputTitle = trim((string) $request->input('title', ''));
+        $contentStr = (string) $request->input('content');
+        $title = $inputTitle !== '' ? $inputTitle : Str::limit(trim(strip_tags($contentStr)), 80, '');
+        $journal = Journal::create([
+            'user_id' => $userId,
+            'title' => (string) $title,
+            'content' => $contentStr,
+            'tags' => ['mentor-chat'],
+            'entry_date' => today(),
+        ]);
+        return response()->json(['journal_id' => $journal->id]);
+    }
+
+    public function tasksFromReply(Request $request)
+    {
+        $request->validate([
+            'conversation_id' => 'required|integer|exists:conversations,id',
+            'content' => 'required|string',
+            'book_id' => 'nullable|integer|exists:books,id',
+        ]);
+        $userId = Auth::id();
+        $conv = Conversation::where('user_id', $userId)->findOrFail($request->integer('conversation_id'));
+        $bookId = $request->input('book_id');
+
+        $text = (string) $request->input('content');
+        $lines = preg_split('/\r?\n/', $text);
+        $tasks = [];
+        foreach ($lines as $line) {
+            $trim = trim($line);
+            if ($trim === '') continue;
+            if (preg_match('/^(?:[-*]\s+|\d+[\.)]\s+)/', $trim)) {
+                $title = preg_replace('/^(?:[-*]\s+|\d+[\.)]\s+)/', '', $trim);
+                $tasks[] = Task::create([
+                    'title' => mb_substr($title, 0, 120),
+                    'description' => $title,
+                    'is_completed' => false,
+                    'user_id' => $userId,
+                    'book_id' => $bookId ?: $conv->book_id,
+                    'priority' => 'medium',
+                ]);
+            }
+        }
+        return response()->json(['created' => array_map(fn($t) => $t->id, $tasks)]);
+    }
+
     public function conversation(Request $request, int $id)
     {
         $userId = Auth::id();
@@ -38,6 +95,50 @@ class AIChatController extends Controller
         return response()->json([
             'conversation' => ['id' => $conv->id, 'title' => $conv->title, 'last_message_at' => $conv->last_message_at],
             'messages' => $messages,
+        ]);
+    }
+
+    /**
+     * Update conversation title
+     */
+    public function updateConversation(Request $request, int $id)
+    {
+        $request->validate([
+            'title' => 'required|string|max:255',
+        ]);
+        
+        $userId = Auth::id();
+        if (!$userId) return response()->json(['error' => 'Unauthorized'], 401);
+        
+        $conv = Conversation::where('user_id', $userId)->findOrFail($id);
+        $conv->update([
+            'title' => $request->input('title'),
+        ]);
+        
+        return response()->json([
+            'message' => 'Conversation updated successfully',
+            'conversation' => $conv,
+        ]);
+    }
+
+    /**
+     * Delete conversation and all its messages
+     */
+    public function deleteConversation(int $id)
+    {
+        $userId = Auth::id();
+        if (!$userId) return response()->json(['error' => 'Unauthorized'], 401);
+        
+        $conv = Conversation::where('user_id', $userId)->findOrFail($id);
+        
+        // Delete all messages first
+        $conv->messages()->delete();
+        
+        // Delete the conversation
+        $conv->delete();
+        
+        return response()->json([
+            'message' => 'Conversation deleted successfully',
         ]);
     }
 

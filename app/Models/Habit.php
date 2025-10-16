@@ -24,6 +24,13 @@ class Habit extends Model
         'book_id',
     ];
 
+    protected $casts = [
+        'last_completed' => 'date',
+        'is_active' => 'boolean',
+        'streak' => 'integer',
+        'target' => 'integer',
+    ];
+
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
@@ -42,6 +49,57 @@ class Habit extends Model
     public function tasks(): HasMany
     {
         return $this->hasMany(Task::class);
+    }
+
+    /**
+     * Check if habit was completed today
+     */
+    public function isCompletedToday(): bool
+    {
+        return $this->last_completed && $this->last_completed->isToday();
+    }
+
+    /**
+     * Mark habit as completed for today
+     */
+    public function markCompleted(): void
+    {
+        $today = now()->toDateString();
+        $lastCompleted = $this->last_completed?->toDateString();
+        
+        if ($lastCompleted === $today) {
+            return; // Already completed today
+        }
+        
+        // Check if we're continuing a streak or starting fresh
+        if ($lastCompleted === now()->subDay()->toDateString()) {
+            // Continuing streak
+            $this->increment('streak');
+        } else {
+            // Starting new streak
+            $this->streak = 1;
+        }
+        
+        $this->last_completed = now();
+        $this->save();
+    }
+
+    /**
+     * Get the current streak status
+     */
+    public function getStreakStatus(): array
+    {
+        $today = now()->toDateString();
+        $yesterday = now()->subDay()->toDateString();
+        $lastCompleted = $this->last_completed?->toDateString();
+        
+        if ($lastCompleted === $today) {
+            return ['status' => 'completed', 'streak' => $this->streak];
+        } elseif ($lastCompleted === $yesterday) {
+            return ['status' => 'pending', 'streak' => $this->streak];
+        } else {
+            return ['status' => 'broken', 'streak' => 0];
+        }
     }
 
 }

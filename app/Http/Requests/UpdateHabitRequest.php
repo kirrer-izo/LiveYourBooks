@@ -11,7 +11,7 @@ class UpdateHabitRequest extends FormRequest
      */
     public function authorize(): bool
     {
-        return false;
+        return auth()->check();
     }
 
     /**
@@ -22,7 +22,10 @@ class UpdateHabitRequest extends FormRequest
     public function rules(): array
     {
         return [
-            //
+            'name' => 'required|string|max:255',
+            'target' => 'nullable|integer|min:1|max:365',
+            'book_id' => 'nullable|exists:books,id',
+            'is_active' => 'boolean',
         ];
     }
 }

@@ -18,6 +18,11 @@ class Journal extends Model
         'entry_date'
     ];
 
+    protected $casts = [
+        'tags' => 'array',
+        'entry_date' => 'date',
+    ];
+
     public function user()
     {
         return $this->belongsTo(User::class);

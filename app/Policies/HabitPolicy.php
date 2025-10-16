@@ -13,7 +13,7 @@ class HabitPolicy
      */
     public function viewAny(User $user): bool
     {
-        return false;
+        return true;
     }
 
     /**
@@ -21,7 +21,7 @@ class HabitPolicy
      */
     public function view(User $user, Habit $habit): bool
     {
-        return false;
+        return $user->id === $habit->user_id;
     }
 
     /**
@@ -29,7 +29,7 @@ class HabitPolicy
      */
     public function create(User $user): bool
     {
-        return false;
+        return true;
     }
 
     /**
@@ -37,7 +37,7 @@ class HabitPolicy
      */
     public function update(User $user, Habit $habit): bool
     {
-        return false;
+        return $user->id === $habit->user_id;
     }
 
     /**
@@ -45,7 +45,7 @@ class HabitPolicy
      */
     public function delete(User $user, Habit $habit): bool
     {
-        return false;
+        return $user->id === $habit->user_id;
     }
 
     /**

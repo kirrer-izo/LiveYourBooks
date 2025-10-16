@@ -49,6 +49,52 @@ const Chat = () => {
 
   React.useEffect(() => { fetchConversations(); }, []);
 
+  const csrfToken = () => document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '';
+
+  const saveToJournal = async (content) => {
+    try {
+      setError("");
+      const csrf = csrfToken();
+      const res = await fetch('/api/journals/from-reply', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+          'X-Requested-With': 'XMLHttpRequest',
+          ...(csrf ? { 'X-CSRF-TOKEN': csrf } : {}),
+        },
+        credentials: 'same-origin',
+        body: JSON.stringify({ conversation_id: conversationId, content }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data?.error || 'Failed to save journal');
+    } catch (e) {
+      setError(e.message || String(e));
+    }
+  };
+
+  const createTasksFromReply = async (content) => {
+    try {
+      setError("");
+      const csrf = csrfToken();
+      const res = await fetch('/api/tasks/from-reply', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+          'X-Requested-With': 'XMLHttpRequest',
+          ...(csrf ? { 'X-CSRF-TOKEN': csrf } : {}),
+        },
+        credentials: 'same-origin',
+        body: JSON.stringify({ conversation_id: conversationId, content, book_id: bookId ? Number(bookId) : undefined }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data?.error || 'Failed to create tasks');
+    } catch (e) {
+      setError(e.message || String(e));
+    }
+  };
+
   const send = async (e) => {
     e.preventDefault();
     if (!input.trim()) return;
@@ -154,10 +200,19 @@ const Chat = () => {
             ) : (
               <div className="space-y-3">
                 {messages.map((m, i) => (
-                  <div key={i} className={m.role === "user" ? "text-right" : "text-left"}>
-                    <div className={`inline-block px-3 py-2 rounded ${m.role === "user" ? "bg-indigo-600 text-white" : "bg-gray-100"}`}>
-                      {m.content}
+                  <div key={i} className="space-y-1">
+                    <div className={m.role === "user" ? "text-right" : "text-left"}>
+                      <div className={`inline-block px-3 py-2 rounded ${m.role === "user" ? "bg-indigo-600 text-white" : "bg-gray-100"}`}>
+                        {m.content}
+                      </div>
                     </div>
+                    {m.role === 'assistant' && (
+                      <div className="flex gap-2 text-xs text-gray-600">
+                        <button type="button" className="underline" onClick={() => saveToJournal(m.content)}>Save to Journal</button>
+                        <span>•</span>
+                        <button type="button" className="underline" onClick={() => createTasksFromReply(m.content)}>Create Tasks</button>
+                      </div>
+                    )}
                   </div>
                 ))}
               </div>
