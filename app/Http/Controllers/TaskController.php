@@ -87,20 +87,10 @@ class TaskController extends Controller
      */
     public function create()
     {
-        $books = Book::where('user_id', Auth::id())
-                    ->select('id', 'title', 'author')
-                    ->orderBy('title')
-                    ->get();
-        
-        $habits = Habit::where('user_id', Auth::id())
-                      ->where('is_active', true)
-                      ->select('id', 'name')
-                      ->orderBy('name')
-                      ->get();
         
         return inertia('Tasks/Create', [
-            'books' => $books,
-            'habits' => $habits,
+            'books' => Book::all(['id','title']),
+            'habits' => Habit::all(['id','name']),
         ]);
     }
 
@@ -190,7 +180,6 @@ class TaskController extends Controller
      */
     public function toggle(Task $task)
     {
-        $this->authorize('update', $task);
         
         $task->update([
             'is_completed' => !$task->is_completed,

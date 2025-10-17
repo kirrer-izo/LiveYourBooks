@@ -88,7 +88,7 @@ class DashboardController extends Controller
             ->limit(5)
             ->get(['id', 'title', 'due_date', 'priority', 'book_id']);
         
-        return inertia('Dashboard', [
+        return inertia('dashboard', [
             'stats' => $stats,
             'recentBooks' => $recentBooks,
             'recentTasks' => $recentTasks,
@@ -99,6 +99,7 @@ class DashboardController extends Controller
             'tasksByPriority' => $tasksByPriority,
             'overdueTasks' => $overdueTasks,
         ]);
+        
     }
     
     private function getWeeklyProgressData($userId)

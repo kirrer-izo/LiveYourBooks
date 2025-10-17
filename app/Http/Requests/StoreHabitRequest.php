@@ -25,6 +25,7 @@ class StoreHabitRequest extends FormRequest
             'name' => 'required|string|max:255',
             'target' => 'nullable|integer|min:1|max:365',
             'book_id' => 'nullable|exists:books,id',
+            'task_id' => 'nullable|exists:tasks,id',
             'is_active' => 'boolean',
         ];
     }
@@ -37,6 +38,7 @@ class StoreHabitRequest extends FormRequest
             'target.min' => 'Target must be at least 1.',
             'target.max' => 'Target cannot exceed 365 days.',
             'book_id.exists' => 'Selected book does not exist.',
+            'task_id.exists' => 'Selected task does not exist',
         ];
     }
 }

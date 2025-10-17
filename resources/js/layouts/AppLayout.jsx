@@ -1,12 +1,12 @@
 import { useState } from "react";
 import { Bell, Sun, Moon, ChevronLeft, ChevronRight, Home, Book, Brain, BookOpenCheck, PersonStanding, Notebook, ChartSpline, User } from "lucide-react";
-import { Link, usePage } from "@inertiajs/react";
+import { Link, usePage, router } from "@inertiajs/react";
 
 export default function AppLayout({ children }) {
   const [darkMode, setDarkMode] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(true);
 
-  const { url } = usePage(); // current route from Inertia
+  const { url, props } = usePage(); // current route and props from Inertia
 
   const navItems = [
     { name: "Dashboard", href: '/dashboard', icon: <Home className="mr-3" /> },
@@ -16,12 +16,11 @@ export default function AppLayout({ children }) {
     { name: "Habit Tracker", href: '/habits', icon: <PersonStanding className="mr-3" /> },
     { name: "Journal", href: '/journals', icon: <Notebook className="mr-3" /> },
     { name: "Analytics", href: '/analytics', icon: <ChartSpline className="mr-3" /> },
-    { name: "Profile", href: '/profile', icon: <User className="mr-3" /> },
+    { name: "Profile", href: '/settings/profile', icon: <User className="mr-3" /> },
   ];
-  
-
-  const user = {
-    name: "John Doe",
+  // Pull authenticated user from shared Inertia props (fallback for dev)
+  const user = props?.auth?.user ?? {
+    name: "User",
     avatar: "https://i.pravatar.cc/150?img=3",
   };
 
@@ -71,17 +70,27 @@ export default function AppLayout({ children }) {
           {/* Top Navigation */}
           <header className="bg-white shadow-sm sticky top-0 z-10">
             <div className="flex items-center justify-between p-4">
-              <h2 className="text-xl font-semibold capitalize">
+              <h2 className="text-lg md:text-xl font-semibold capitalize truncate">
                 {url.split("/") [1]?.split("?")[0] || "dashboard"}
               </h2>
-              <div className="flex items-center space-x-4">
-                <button className="p-2 rounded-full hover:bg-gray-100">
-                  <Bell />
+              <div className="flex items-center space-x-3 md:space-x-4">
+                {/* Notifications */}
+                <button aria-label="Notifications" className="p-2 rounded-full hover:bg-gray-100">
+                  <Bell className="h-5 w-5" />
                 </button>
-                <div className="flex items-center space-x-2">
+                {/* User */}
+                <Link href="/settings/profile" className="flex items-center space-x-2">
                   <img src={user.avatar} alt="User" className="w-8 h-8 rounded-full" />
-                  {sidebarOpen && <span className="font-medium">{user.name}</span>}
-                </div>
+                  {/* Show username on md+ screens */}
+                  <span className="hidden md:block font-medium max-w-[10rem] truncate">{user.name}</span>
+                </Link>
+                {/* Logout */}
+                <button
+                  onClick={() => router.post('/logout')}
+                  className="hidden sm:inline-flex px-3 py-1.5 text-sm border rounded-md hover:bg-gray-50"
+                >
+                  Log out
+                </button>
               </div>
             </div>
           </header>

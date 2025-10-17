@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Habit;
 use App\Models\Book;
+use App\Models\Task;
 use App\Http\Requests\StoreHabitRequest;
 use App\Http\Requests\UpdateHabitRequest;
 use Illuminate\Support\Facades\Auth;
@@ -61,14 +62,10 @@ class HabitController extends Controller
      * Show the form for creating a new resource.
      */
     public function create()
-    {
-        $books = Book::where('user_id', Auth::id())
-                    ->select('id', 'title', 'author')
-                    ->orderBy('title')
-                    ->get();
-        
+    {        
         return inertia('Habits/Create', [
-            'books' => $books,
+            'books' => Book::all(['id', 'title']),
+            'tasks' => Task::all(['id', 'title'])
         ]);
     }
 
@@ -166,7 +163,7 @@ class HabitController extends Controller
      */
     public function checkIn(Habit $habit)
     {
-        $this->authorize('update', $habit);
+        
         
         if ($habit->isCompletedToday()) {
             return response()->json([

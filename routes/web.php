@@ -15,6 +15,14 @@ Route::get('/', function () {
     return Inertia::render('welcome');
 })->name('home');
 
+// Public dashboard route - redirects to auth dashboard if logged in
+Route::get('/dashboard', function () {
+    if (auth()->check()) {
+        return app(\App\Http\Controllers\DashboardController::class)->index();
+    }
+    return redirect()->route('login');
+})->name('dashboard');
+
 // Public routes will be handled in auth middleware group below
 
 // AI Chat endpoint
@@ -54,9 +62,6 @@ Route::middleware(['auth'])->group(function () {
 });
 
 Route::middleware(['auth', 'verified'])->group(function () {
-    // Dashboard
-    Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
-    
     // Resource routes
     Route::resource('books', BookController::class);
     Route::resource('journals', JournalController::class);
