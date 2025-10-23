@@ -20,13 +20,13 @@ export default function Login({ status, canResetPassword }: LoginProps) {
         <>
             <Head title="Log in" />
 
-            <div className="min-h-screen flex items-center justify-center bg-gray-50">
-                <div className="w-full max-w-md p-8 space-y-8 bg-white rounded-lg shadow-md">
+            <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900">
+                <div className="w-full max-w-md p-8 space-y-8 bg-white dark:bg-gray-800 rounded-lg shadow-md">
                     <Head title="Log in" />
                     
                     <div className="text-center">
-                        <h1 className="text-3xl font-bold text-indigo-700">Live Your Books</h1>
-                        <p className="mt-2 text-gray-600">Sign in to your account</p>
+                        <h1 className="text-3xl font-bold text-indigo-700 dark:text-indigo-400">Live Your Books</h1>
+                        <p className="mt-2 text-gray-600 dark:text-gray-300">Sign in to your account</p>
                     </div>
 
                     <Form {...AuthenticatedSessionController.store.form()} resetOnSuccess={['password']} className="space-y-6">

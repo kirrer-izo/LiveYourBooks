@@ -163,23 +163,14 @@ class HabitController extends Controller
      */
     public function checkIn(Habit $habit)
     {
-        
-        
+        // If already completed today, inform the user via flash message
         if ($habit->isCompletedToday()) {
-            return response()->json([
-                'message' => 'Habit already completed today!',
-                'completed_today' => true,
-                'streak' => $habit->streak,
-            ]);
+            return redirect()->back()->with('info', 'Habit already completed today!');
         }
-        
+
+        // Mark as completed and redirect back with success flash
         $habit->markCompleted();
-        
-        return response()->json([
-            'message' => 'Habit checked in successfully!',
-            'completed_today' => true,
-            'streak' => $habit->streak,
-            'streak_status' => $habit->getStreakStatus(),
-        ]);
+
+        return redirect()->back()->with('success', 'Habit checked in successfully! Current streak: ' . $habit->streak);
     }
 }

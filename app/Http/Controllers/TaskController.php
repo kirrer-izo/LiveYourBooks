@@ -180,16 +180,12 @@ class TaskController extends Controller
      */
     public function toggle(Task $task)
     {
-        
         $task->update([
             'is_completed' => !$task->is_completed,
         ]);
-        
+
         $message = $task->is_completed ? 'Task marked as completed!' : 'Task marked as pending!';
-        
-        return response()->json([
-            'message' => $message,
-            'is_completed' => $task->is_completed,
-        ]);
+
+        return redirect()->back()->with('success', $message);
     }
 }

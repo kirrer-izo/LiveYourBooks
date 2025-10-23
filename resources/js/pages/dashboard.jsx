@@ -46,12 +46,12 @@ const Dashboard = ({
             <Head title="Dashboard" />
             <div className="space-y-6">
                 <div className="flex items-center justify-between">
-                    <h1 className="text-2xl font-bold text-gray-900">Dashboard</h1>
+                    <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Dashboard</h1>
                     <div className="flex space-x-3">
-                        <Link href="/journals/create" className="bg-indigo-600 text-white px-4 py-2 rounded-md text-sm font-medium hover:bg-indigo-700">
+                        <Link href="/journals/create" className="bg-indigo-600 hover:bg-indigo-700 dark:bg-indigo-700 dark:hover:bg-indigo-800 text-white px-4 py-2 rounded-md text-sm font-medium">
                             Quick Journal
                         </Link>
-                        <Link href="/mentor/chat" className="bg-green-600 text-white px-4 py-2 rounded-md text-sm font-medium hover:bg-green-700">
+                        <Link href="/mentor/chat" className="bg-green-600 hover:bg-green-700 dark:bg-green-700 dark:hover:bg-green-800 text-white px-4 py-2 rounded-md text-sm font-medium">
                             AI Mentor
                         </Link>
                     </div>
@@ -59,54 +59,54 @@ const Dashboard = ({
 
                 {/* Stats Cards */}
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                    <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-100">
+                    <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-sm border border-gray-100 dark:border-gray-700">
                         <div className="flex items-center justify-between">
                             <div>
-                                <p className="text-sm font-medium text-gray-500">Total Books</p>
-                                <p className="text-3xl font-bold mt-1">{safeStats.total_books}</p>
-                                <p className="text-xs text-gray-400 mt-1">{safeStats.books_completed} completed</p>
+                                <p className="text-sm font-medium text-gray-500 dark:text-gray-400">Total Books</p>
+                                <p className="text-3xl font-bold mt-1 text-gray-900 dark:text-white">{safeStats.total_books}</p>
+                                <p className="text-xs text-gray-400 dark:text-gray-500 mt-1">{safeStats.books_completed} completed</p>
                             </div>
-                            <div className="p-3 bg-blue-100 rounded-full">
-                                <BookOpen className="h-6 w-6 text-blue-600" />
+                            <div className="p-3 bg-blue-100 dark:bg-blue-900 rounded-full">
+                                <BookOpen className="h-6 w-6 text-blue-600 dark:text-blue-400" />
                             </div>
                         </div>
                     </div>
                     
-                    <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-100">
+                    <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-sm border border-gray-100 dark:border-gray-700">
                         <div className="flex items-center justify-between">
                             <div>
-                                <p className="text-sm font-medium text-gray-500">Active Tasks</p>
-                                <p className="text-3xl font-bold mt-1">{safeStats.tasks_pending}</p>
-                                <p className="text-xs text-gray-400 mt-1">{safeStats.tasks_completed} completed</p>
+                                <p className="text-sm font-medium text-gray-500 dark:text-gray-400">Active Tasks</p>
+                                <p className="text-3xl font-bold mt-1 text-gray-900 dark:text-white">{safeStats.tasks_pending}</p>
+                                <p className="text-xs text-gray-400 dark:text-gray-500 mt-1">{safeStats.tasks_completed} completed</p>
                             </div>
-                            <div className="p-3 bg-green-100 rounded-full">
-                                <CheckCircle className="h-6 w-6 text-green-600" />
+                            <div className="p-3 bg-green-100 dark:bg-green-900 rounded-full">
+                                <CheckCircle className="h-6 w-6 text-green-600 dark:text-green-400" />
                             </div>
                         </div>
                     </div>
                     
-                    <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-100">
+                    <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-sm border border-gray-100 dark:border-gray-700">
                         <div className="flex items-center justify-between">
                             <div>
-                                <p className="text-sm font-medium text-gray-500">Active Habits</p>
-                                <p className="text-3xl font-bold mt-1">{safeStats.active_habits}</p>
-                                <p className="text-xs text-gray-400 mt-1">Daily tracking</p>
+                                <p className="text-sm font-medium text-gray-500 dark:text-gray-400">Active Habits</p>
+                                <p className="text-3xl font-bold mt-1 text-gray-900 dark:text-white">{safeStats.active_habits}</p>
+                                <p className="text-xs text-gray-400 dark:text-gray-500 mt-1">Daily tracking</p>
                             </div>
-                            <div className="p-3 bg-orange-100 rounded-full">
-                                <Flame className="h-6 w-6 text-orange-600" />
+                            <div className="p-3 bg-orange-100 dark:bg-orange-900 rounded-full">
+                                <Flame className="h-6 w-6 text-orange-600 dark:text-orange-400" />
                             </div>
                         </div>
                     </div>
                     
-                    <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-100">
+                    <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-sm border border-gray-100 dark:border-gray-700">
                         <div className="flex items-center justify-between">
                             <div>
-                                <p className="text-sm font-medium text-gray-500">Journal Entries</p>
-                                <p className="text-3xl font-bold mt-1">{safeStats.journal_entries}</p>
-                                <p className="text-xs text-gray-400 mt-1">Total reflections</p>
+                                <p className="text-sm font-medium text-gray-500 dark:text-gray-400">Journal Entries</p>
+                                <p className="text-3xl font-bold mt-1 text-gray-900 dark:text-white">{safeStats.journal_entries}</p>
+                                <p className="text-xs text-gray-400 dark:text-gray-500 mt-1">Total reflections</p>
                             </div>
-                            <div className="p-3 bg-purple-100 rounded-full">
-                                <PencilLine className="h-6 w-6 text-purple-600" />
+                            <div className="p-3 bg-purple-100 dark:bg-purple-900 rounded-full">
+                                <PencilLine className="h-6 w-6 text-purple-600 dark:text-purple-400" />
                             </div>
                         </div>
                     </div>
@@ -114,15 +114,15 @@ const Dashboard = ({
 
                 {/* Overdue Tasks Alert */}
                 {safeOverdueTasks.length > 0 && (
-                    <div className="bg-red-50 border border-red-200 rounded-lg p-4">
+                    <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-4">
                         <div className="flex items-center">
-                            <AlertTriangle className="h-5 w-5 text-red-400 mr-2" />
-                            <h3 className="text-sm font-medium text-red-800">
+                            <AlertTriangle className="h-5 w-5 text-red-400 dark:text-red-500 mr-2" />
+                            <h3 className="text-sm font-medium text-red-800 dark:text-red-300">
                                 You have {safeOverdueTasks.length} overdue task(s)
                             </h3>
                         </div>
-                        <div className="mt-2 text-sm text-red-700">
-                            <Link href="/tasks?status=overdue" className="underline hover:text-red-900">
+                        <div className="mt-2 text-sm text-red-700 dark:text-red-400">
+                            <Link href="/tasks?status=overdue" className="underline hover:text-red-900 dark:hover:text-red-300">
                                 View overdue tasks
                             </Link>
                         </div>
@@ -132,42 +132,42 @@ const Dashboard = ({
                 {/* Main Content Grid */}
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                     {/* Recent Books */}
-                    <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-100">
+                    <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-sm border border-gray-100 dark:border-gray-700">
                         <div className="flex items-center justify-between mb-4">
-                            <h3 className="text-lg font-semibold">Recent Books</h3>
-                            <Link href="/books" className="text-sm text-indigo-600 hover:text-indigo-500">View All</Link>
+                            <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Recent Books</h3>
+                            <Link href="/books" className="text-sm text-indigo-600 dark:text-indigo-400 hover:text-indigo-500 dark:hover:text-indigo-300">View All</Link>
                         </div>
                         <div className="space-y-3">
                             {safeRecentBooks.map(book => (
-                                <div key={book.id} className="flex items-center p-3 border border-gray-100 rounded-lg hover:bg-gray-50">
+                                <div key={book.id} className="flex items-center p-3 border border-gray-100 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700">
                                     <div className="flex-1">
-                                        <h4 className="font-medium text-sm">{book.title}</h4>
-                                        <p className="text-xs text-gray-500">{book.author}</p>
-                                        <div className="mt-1 w-full bg-gray-200 rounded-full h-1.5">
+                                        <h4 className="font-medium text-sm text-gray-900 dark:text-white">{book.title}</h4>
+                                        <p className="text-xs text-gray-500 dark:text-gray-400">{book.author}</p>
+                                        <div className="mt-1 w-full bg-gray-200 dark:bg-gray-600 rounded-full h-1.5">
                                             <div 
-                                                className="bg-indigo-600 h-1.5 rounded-full" 
+                                                className="bg-indigo-600 dark:bg-indigo-500 h-1.5 rounded-full" 
                                                 style={{ width: `${book.progress}%` }}
                                             ></div>
                                         </div>
-                                        <p className="text-xs text-gray-400 mt-1">{book.progress}% complete</p>
+                                        <p className="text-xs text-gray-400 dark:text-gray-500 mt-1">{book.progress}% complete</p>
                                     </div>
                                 </div>
                             ))}
                             {safeRecentBooks.length === 0 && (
-                                <div className="text-center py-4 text-gray-500 text-sm">
-                                    <BookOpen className="h-8 w-8 mx-auto mb-2 text-gray-300" />
+                                <div className="text-center py-4 text-gray-500 dark:text-gray-400 text-sm">
+                                    <BookOpen className="h-8 w-8 mx-auto mb-2 text-gray-300 dark:text-gray-600" />
                                     <p>No books yet</p>
-                                    <Link href="/books/create" className="text-indigo-600 hover:text-indigo-500">Add your first book</Link>
+                                    <Link href="/books/create" className="text-indigo-600 dark:text-indigo-400 hover:text-indigo-500 dark:hover:text-indigo-300">Add your first book</Link>
                                 </div>
                             )}
                         </div>
                     </div>
 
                     {/* Active Habits */}
-                    <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-100">
+                    <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-sm border border-gray-100 dark:border-gray-700">
                         <div className="flex items-center justify-between mb-4">
-                            <h3 className="text-lg font-semibold">Today's Habits</h3>
-                            <Link href="/habits" className="text-sm text-indigo-600 hover:text-indigo-500">View All</Link>
+                            <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Today's Habits</h3>
+                            <Link href="/habits" className="text-sm text-indigo-600 dark:text-indigo-400 hover:text-indigo-500 dark:hover:text-indigo-300">View All</Link>
                         </div>
                         <div className="space-y-3">
                             {safeHabits.map(habit => (

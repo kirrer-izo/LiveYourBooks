@@ -86,6 +86,113 @@ class AIChatController extends Controller
         return response()->json(['created' => array_map(fn($t) => $t->id, $tasks)]);
     }
 
+    public function generateTaskSuggestions(Request $request)
+    {
+        $request->validate([
+            'book_id' => 'required|integer|exists:books,id',
+        ]);
+
+        $userId = Auth::id();
+        $book = Book::where('user_id', $userId)->findOrFail($request->input('book_id'));
+
+        $apiKey = env('OPENAI_API_KEY')
+            ?: config('services.openai.key')
+            ?: config('services.slack.openai.aiapi_key');
+        if (!$apiKey) {
+            return response()->json(['error' => 'Missing OPENAI_API_KEY'], 500);
+        }
+
+        $model = config('services.openai.model') ?: 'gpt-3.5-turbo';
+
+        // Build context for the book
+        $bookContext = "Book: {$book->title}";
+        if ($book->author) {
+            $bookContext .= " by {$book->author}";
+        }
+        if ($book->genre) {
+            $bookContext .= " (Genre: {$book->genre})";
+        }
+        if ($book->life_area) {
+            $bookContext .= " (Life Area: {$book->life_area})";
+        }
+
+        $system = "You are an AI assistant that helps users create actionable tasks based on book content. 
+Given a book, generate 5-7 practical, specific tasks that would help someone apply the key concepts from this book to their daily life.
+
+Rules:
+- Each task should be actionable and specific
+- Tasks should be achievable within 1-2 weeks
+- Focus on practical application of the book's main concepts
+- Vary the difficulty and time commitment
+- Format as a simple numbered list
+- Keep each task title under 100 characters
+- Make tasks relevant to personal development and growth
+
+Book Context: {$bookContext}";
+
+        $prompt = "Generate actionable tasks based on the key concepts and teachings from this book. Focus on practical steps someone could take to implement the book's ideas in their daily life.";
+
+        try {
+            $client = new Client([
+                'base_uri' => 'https://api.openai.com',
+                'timeout' => 30,
+                'connect_timeout' => 10,
+            ]);
+
+            $response = $client->post('/v1/chat/completions', [
+                'headers' => [
+                    'Authorization' => 'Bearer ' . $apiKey,
+                    'Content-Type' => 'application/json',
+                ],
+                'json' => [
+                    'model' => $model,
+                    'messages' => [
+                        ['role' => 'system', 'content' => $system],
+                        ['role' => 'user', 'content' => $prompt],
+                    ],
+                    'temperature' => 0.7,
+                    'max_tokens' => 600,
+                ],
+            ]);
+
+            $data = json_decode((string) $response->getBody(), true);
+            $suggestions = $data['choices'][0]['message']['content'] ?? '';
+
+            // Parse the suggestions and create tasks
+            $lines = preg_split('/\r?\n/', $suggestions);
+            $tasks = [];
+            foreach ($lines as $line) {
+                $trim = trim($line);
+                if ($trim === '') continue;
+                if (preg_match('/^(?:[-*]\s+|\d+[\.)]\s+)/', $trim)) {
+                    $title = preg_replace('/^(?:[-*]\s+|\d+[\.)]\s+)/', '', $trim);
+                    $title = trim($title);
+                    if (strlen($title) > 0) {
+                        $tasks[] = Task::create([
+                            'title' => mb_substr($title, 0, 120),
+                            'description' => $title,
+                            'is_completed' => false,
+                            'user_id' => $userId,
+                            'book_id' => $book->id,
+                            'priority' => 'medium',
+                            'due_date' => now()->addWeeks(2), // Set due date 2 weeks from now
+                        ]);
+                    }
+                }
+            }
+
+            return redirect()->back()->with('success', 
+                'Generated ' . count($tasks) . ' task suggestions successfully! Check your Tasks page to see them.'
+            );
+
+        } catch (\Throwable $e) {
+            Log::error('AI task suggestion error', ['error' => $e->getMessage()]);
+            return redirect()->back()->with('error', 
+                'Failed to generate task suggestions: ' . $e->getMessage()
+            );
+        }
+    }
+
     public function conversation(Request $request, int $id)
     {
         $userId = Auth::id();

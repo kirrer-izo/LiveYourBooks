@@ -79,12 +79,12 @@ const Index = ({ habits, filters, books }) => {
             <div className="space-y-6">
                 <div className="flex flex-col md:flex-row md:items-center md:justify-between">
                     <div className="flex items-center space-x-3">
-                        <Flame className="h-8 w-8 text-orange-600" />
-                        <h1 className="text-2xl font-bold text-gray-900">Habit Tracker</h1>
+                        <Flame className="h-8 w-8 text-orange-600 dark:text-orange-400" />
+                        <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Habit Tracker</h1>
                     </div>
                     <Link
                         href="/habits/create"
-                        className="bg-indigo-600 text-white px-4 py-2 rounded-md text-sm font-medium hover:bg-indigo-700 flex items-center"
+                        className="bg-indigo-600 hover:bg-indigo-700 dark:bg-indigo-700 dark:hover:bg-indigo-800 text-white px-4 py-2 rounded-md text-sm font-medium flex items-center"
                     >
                         <Plus className="h-4 w-4 mr-2" />
                         New Habit
@@ -92,7 +92,7 @@ const Index = ({ habits, filters, books }) => {
                 </div>
 
                 {/* Filters */}
-                <div className="bg-white p-4 rounded-lg shadow-sm border border-gray-100">
+                <div className="bg-white dark:bg-gray-800 p-4 rounded-lg shadow-sm border border-gray-100 dark:border-gray-700">
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                         <select
                             className="border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500"

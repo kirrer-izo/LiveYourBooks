@@ -4,6 +4,7 @@ use App\Http\Controllers\BookController;
 use App\Http\Controllers\AIChatController;
 use App\Http\Controllers\MentorController;
 use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\AnalyticsController;
 use App\Http\Controllers\JournalController;
 use App\Http\Controllers\TaskController;
 use App\Http\Controllers\HabitController;
@@ -59,6 +60,11 @@ Route::middleware(['auth'])->group(function () {
         ->name('tasks.from_reply')
         ->withoutMiddleware([\App\Http\Middleware\VerifyCsrfToken::class])
         ->middleware('throttle:60,1');
+
+    Route::post('/api/books/{book_id}/generate-tasks', [AIChatController::class, 'generateTaskSuggestions'])
+        ->name('books.generate_tasks')
+        ->withoutMiddleware([\App\Http\Middleware\VerifyCsrfToken::class])
+        ->middleware('throttle:30,1');
 });
 
 Route::middleware(['auth', 'verified'])->group(function () {
@@ -95,7 +101,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     })->name('mentor.chat.ui');
     
     // Analytics page
-    Route::get('/analytics', fn() => Inertia::render('Analytics/Index'))->name('analytics');
+    Route::get('/analytics', [AnalyticsController::class, 'index'])->name('analytics');
     Route::get('/profile', fn() => Inertia::render('Profile/Index'))->name('profile');
 });
 

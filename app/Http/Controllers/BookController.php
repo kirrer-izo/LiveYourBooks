@@ -92,29 +92,35 @@ class BookController extends Controller
     {
         $validated = $request->validated();
         
-        // Handle file upload
+        
         if ($request->hasFile('cover_img')) {
             $file = $request->file('cover_img');
             $path = $file->store('book-covers', 'public');
-            $validated['cover_img'] = $path; // store PDF path in cover_img
+            $validated['cover_img'] = $path; 
 
-            // Extract title and author from uploaded PDF
+            
             $bookInfo = ['title' => null, 'author' => null];
             try {
                 Log::info('Starting PDF extraction for: ' . $file->getClientOriginalName());
                 $bookInfo = $this->extractBookInfoFromPdf($file);
                 Log::info('PDF extraction result', $bookInfo);
+
+                $bookInfo['title'] = !empty($bookInfo['title'])
+                ? mb_convert_encoding($bookInfo['title'], 'UTF-8', 'UTF-8')
+                : null;
+
+                $bookInfo['author'] = !empty($bookInfo['author'])
+                ? mb_convert_encoding($bookInfo['author'], 'UTF-8', 'UTF-8')
+                : null;
             } catch (\Throwable $e) {
                 Log::error('Book info extraction failed', ['error' => $e->getMessage()]);
             }
 
-            // Fallback: try to derive title from original filename if still unknown
             $derivedTitle = null;
             if (empty($bookInfo['title'])) {
                 $original = $file->getClientOriginalName();
                 $basename = pathinfo($original, PATHINFO_FILENAME);
                 
-                // Clean up common prefixes like "_OceanofPDF.com_"
                 $cleaned = preg_replace('/^[_\-]*[a-zA-Z0-9]*of[a-zA-Z]*\.com[_\-]*/', '', $basename);
                 $cleaned = preg_replace('/^[_\-]+|[_\-]+$/', '', $cleaned);
                 $derivedTitle = trim(preg_replace('/[_-]+/', ' ', (string)$cleaned));
@@ -123,12 +129,12 @@ class BookController extends Controller
             $validated['title'] = !empty($bookInfo['title'])
                 ? $bookInfo['title']
                 : (!empty($derivedTitle) ? $derivedTitle : ($validated['title'] ?? 'Unknown Title'));
-            // If author missing, try filename pattern: "Title - Author" or "Author - Title"
+
             if (empty($bookInfo['author'])) {
                 $original = $file->getClientOriginalName();
                 $base = pathinfo($original, PATHINFO_FILENAME);
                 
-                // Clean up the base filename like we did for title
+    
                 $cleanBase = preg_replace('/^[_\-]*[a-zA-Z0-9]*of[a-zA-Z]*\.com[_\-]*/', '', $base);
                 $cleanBase = preg_replace('/^[_\-]+|[_\-]+$/', '', $cleanBase);
                 $cleanBase = trim(preg_replace('/[_-]+/', ' ', (string)$cleanBase));
@@ -141,7 +147,7 @@ class BookController extends Controller
                     } elseif (!empty($derivedTitle) && strcasecmp($derivedTitle, $right) === 0) {
                         $bookInfo['author'] = $left;
                     } else {
-                        // Heuristic: if left has 2+ words with capitals, treat as author
+
                         if (preg_match_all('/\b[A-Z][a-z]+\b/', $left) >= 2) {
                             $bookInfo['author'] = $left;
                         } elseif (preg_match_all('/\b[A-Z][a-z]+\b/', $right) >= 2) {

@@ -14,9 +14,8 @@ class DatabaseSeeder extends Seeder
      */
     public function run(): void
     {
-        // User::factory(10)->create();
-
-        User::firstOrCreate(
+        // Create demo user
+        $user = User::firstOrCreate(
             ['email' => 'test@example.com'],
             [
                 'name' => 'Test User',
@@ -24,5 +23,15 @@ class DatabaseSeeder extends Seeder
                 'email_verified_at' => now(),
             ]
         );
+
+        // Run all seeders for demo data
+        $this->call([
+            MentorSeeder::class,
+            BookSeeder::class,
+            TaskSeeder::class,
+            HabitSeeder::class,
+            JournalSeeder::class,
+            MentorMessageSeeder::class,
+        ]);
     }
 }
