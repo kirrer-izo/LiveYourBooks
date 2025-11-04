@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Book;
 use App\Http\Requests\StoreBookRequest;
 use App\Http\Requests\UpdateBookRequest;
+use App\Services\BookUploadService;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
@@ -14,6 +15,9 @@ use Smalot\PdfParser\Parser as PdfParser;
 
 class BookController extends Controller
 {
+    public function __construct(
+        private BookUploadService $bookUploadService
+    ) {}
 
     public function index()
     {
@@ -33,10 +37,10 @@ class BookController extends Controller
             });
         }
 
-        if ($status === 'reading') {
-            $query->where('progress', '<', 100);
-        } elseif ($status === 'completed') {
-            $query->where('progress', 100);
+        if ($status === 'completed') {
+            $query->where('is_completed', true);
+        } elseif ($status === 'reading') {
+            $query->where('is_completed', false);
         }
 
         if ($category && $category !== 'all') {
@@ -90,83 +94,64 @@ class BookController extends Controller
 
     public function store(StoreBookRequest $request)
     {
-        $validated = $request->validated();
-        
-        
-        if ($request->hasFile('cover_img')) {
-            $file = $request->file('cover_img');
-            $path = $file->store('book-covers', 'public');
-            $validated['cover_img'] = $path; 
-
+        try {
+            $validated = $request->validated();
             
-            $bookInfo = ['title' => null, 'author' => null];
-            try {
-                Log::info('Starting PDF extraction for: ' . $file->getClientOriginalName());
-                $bookInfo = $this->extractBookInfoFromPdf($file);
-                Log::info('PDF extraction result', $bookInfo);
-
-                $bookInfo['title'] = !empty($bookInfo['title'])
-                ? mb_convert_encoding($bookInfo['title'], 'UTF-8', 'UTF-8')
-                : null;
-
-                $bookInfo['author'] = !empty($bookInfo['author'])
-                ? mb_convert_encoding($bookInfo['author'], 'UTF-8', 'UTF-8')
-                : null;
-            } catch (\Throwable $e) {
-                Log::error('Book info extraction failed', ['error' => $e->getMessage()]);
+            // Handle cover image upload
+            if ($request->hasFile('cover_img')) {
+                $coverFile = $request->file('cover_img');
+                $coverPath = $coverFile->store('book-covers', 'public');
+                $validated['cover_img'] = $coverPath;
             }
-
-            $derivedTitle = null;
-            if (empty($bookInfo['title'])) {
-                $original = $file->getClientOriginalName();
-                $basename = pathinfo($original, PATHINFO_FILENAME);
+            
+            // Handle book file upload
+            if ($request->hasFile('book_file')) {
+                $bookFile = $request->file('book_file');
                 
-                $cleaned = preg_replace('/^[_\-]*[a-zA-Z0-9]*of[a-zA-Z]*\.com[_\-]*/', '', $basename);
-                $cleaned = preg_replace('/^[_\-]+|[_\-]+$/', '', $cleaned);
-                $derivedTitle = trim(preg_replace('/[_-]+/', ' ', (string)$cleaned));
-            }
-
-            $validated['title'] = !empty($bookInfo['title'])
-                ? $bookInfo['title']
-                : (!empty($derivedTitle) ? $derivedTitle : ($validated['title'] ?? 'Unknown Title'));
-
-            if (empty($bookInfo['author'])) {
-                $original = $file->getClientOriginalName();
-                $base = pathinfo($original, PATHINFO_FILENAME);
-                
-    
-                $cleanBase = preg_replace('/^[_\-]*[a-zA-Z0-9]*of[a-zA-Z]*\.com[_\-]*/', '', $base);
-                $cleanBase = preg_replace('/^[_\-]+|[_\-]+$/', '', $cleanBase);
-                $cleanBase = trim(preg_replace('/[_-]+/', ' ', (string)$cleanBase));
-                
-                if (str_contains($cleanBase, ' - ')) {
-                    [$left, $right] = array_map('trim', explode(' - ', $cleanBase, 2));
-                    // Prefer author on right if title already matched derivedTitle
-                    if (!empty($derivedTitle) && strcasecmp($derivedTitle, $left) === 0) {
-                        $bookInfo['author'] = $right;
-                    } elseif (!empty($derivedTitle) && strcasecmp($derivedTitle, $right) === 0) {
-                        $bookInfo['author'] = $left;
-                    } else {
-
-                        if (preg_match_all('/\b[A-Z][a-z]+\b/', $left) >= 2) {
-                            $bookInfo['author'] = $left;
-                        } elseif (preg_match_all('/\b[A-Z][a-z]+\b/', $right) >= 2) {
-                            $bookInfo['author'] = $right;
+                // Extract book info from PDF if title/author are missing
+                if (empty($validated['title']) || empty($validated['author'])) {
+                    if ($bookFile->getClientOriginalExtension() === 'pdf') {
+                        try {
+                            $extractedInfo = $this->extractBookInfoFromPdf($bookFile);
+                            if (empty($validated['title']) && !empty($extractedInfo['title'])) {
+                                $validated['title'] = $extractedInfo['title'];
+                            }
+                            if (empty($validated['author']) && !empty($extractedInfo['author'])) {
+                                $validated['author'] = $extractedInfo['author'];
+                            }
+                        } catch (\Exception $e) {
+                            Log::warning('Failed to extract book info from PDF', ['error' => $e->getMessage()]);
+                            // Continue with defaults if extraction fails
                         }
                     }
                 }
+                
+                // Ensure title exists (required field)
+                if (empty($validated['title'])) {
+                    $validated['title'] = $bookFile->getClientOriginalName();
+                }
+                
+                $book = $this->bookUploadService->uploadBook(Auth::user(), $bookFile, $validated);
+            } else {
+                // Create book without file (manual entry)
+                $validated['user_id'] = Auth::id();
+                $validated['is_completed'] = false;
+                $book = Book::create($validated);
             }
-            $validated['author'] = !empty($bookInfo['author']) ? $bookInfo['author'] : ($validated['author'] ?? 'Unknown Author');
+            
+            return redirect()->route('books.index')
+                ->with('success', 'Book added successfully!');
+                
+        } catch (\InvalidArgumentException $e) {
+            return redirect()->back()
+                ->withErrors(['book_file' => $e->getMessage()])
+                ->withInput();
+        } catch (\Exception $e) {
+            Log::error('Book upload failed', ['error' => $e->getMessage()]);
+            return redirect()->back()
+                ->withErrors(['error' => 'Failed to upload book. Please try again.'])
+                ->withInput();
         }
-        
-        $validated['user_id'] = Auth::id();
-        $validated['progress'] = 0;
-        $validated['is_completed'] = false;
-        
-        Book::create($validated);
-        
-        return redirect()->route('books.index')
-            ->with('success', 'Book added successfully!');
     }
 
     /**
@@ -530,4 +515,20 @@ class BookController extends Controller
         return redirect()->route('books.index')
             ->with('success', 'Book deleted successfully!');
     }
+
+    /**
+     * Download the book file
+     */
+    public function download(Book $book)
+    {
+        $this->authorize('view', $book);
+        
+        if (!$book->file_path || !Storage::disk('private')->exists($book->file_path)) {
+            abort(404, 'Book file not found');
+        }
+        
+        $filePath = Storage::disk('private')->path($book->file_path);
+        return response()->download($filePath, $book->title . '.' . $book->file_type);
+    }
+
 }

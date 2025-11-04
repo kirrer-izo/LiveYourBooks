@@ -8,6 +8,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use App\Models\Conversation;
+use App\Models\Thinker;
 
 class User extends Authenticatable
 {
@@ -82,5 +83,10 @@ class User extends Authenticatable
     public function conversations(): HasMany
     {
         return $this->hasMany(Conversation::class);
+    }
+
+    public function thinkers(): HasMany
+    {
+        return $this->hasMany(Thinker::class);
     }
 }

@@ -26,8 +26,6 @@ const Dashboard = ({
     // Defensive defaults to avoid runtime errors when props are missing
     const safeStats = stats ?? {
         total_books: 0,
-        books_reading: 0,
-        books_completed: 0,
         total_tasks: 0,
         tasks_completed: 0,
         tasks_pending: 0,
@@ -64,7 +62,6 @@ const Dashboard = ({
                             <div>
                                 <p className="text-sm font-medium text-gray-500 dark:text-gray-400">Total Books</p>
                                 <p className="text-3xl font-bold mt-1 text-gray-900 dark:text-white">{safeStats.total_books}</p>
-                                <p className="text-xs text-gray-400 dark:text-gray-500 mt-1">{safeStats.books_completed} completed</p>
                             </div>
                             <div className="p-3 bg-blue-100 dark:bg-blue-900 rounded-full">
                                 <BookOpen className="h-6 w-6 text-blue-600 dark:text-blue-400" />
@@ -143,13 +140,6 @@ const Dashboard = ({
                                     <div className="flex-1">
                                         <h4 className="font-medium text-sm text-gray-900 dark:text-white">{book.title}</h4>
                                         <p className="text-xs text-gray-500 dark:text-gray-400">{book.author}</p>
-                                        <div className="mt-1 w-full bg-gray-200 dark:bg-gray-600 rounded-full h-1.5">
-                                            <div 
-                                                className="bg-indigo-600 dark:bg-indigo-500 h-1.5 rounded-full" 
-                                                style={{ width: `${book.progress}%` }}
-                                            ></div>
-                                        </div>
-                                        <p className="text-xs text-gray-400 dark:text-gray-500 mt-1">{book.progress}% complete</p>
                                     </div>
                                 </div>
                             ))}

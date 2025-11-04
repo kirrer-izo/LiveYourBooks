@@ -188,4 +188,50 @@ class TaskController extends Controller
 
         return redirect()->back()->with('success', $message);
     }
+
+    /**
+     * Create multiple tasks at once
+     */
+    public function bulkCreate(Request $request)
+    {
+        $request->validate([
+            'tasks' => 'required|array|min:1',
+            'tasks.*.title' => 'required|string|max:255',
+            'tasks.*.description' => 'nullable|string|max:1000',
+            'tasks.*.priority' => 'required|in:low,medium,high',
+            'tasks.*.due_date' => 'nullable|date|after_or_equal:today',
+            'tasks.*.book_id' => 'nullable|exists:books,id',
+            'tasks.*.type' => 'required|in:task,habit',
+        ]);
+
+        $createdTasks = [];
+        $createdHabits = [];
+
+        foreach ($request->input('tasks') as $taskData) {
+            $taskData['user_id'] = Auth::id();
+            $taskData['is_completed'] = false;
+
+            if ($taskData['type'] === 'habit') {
+                // Create habit instead of task
+                $habit = Habit::create([
+                    'user_id' => $taskData['user_id'],
+                    'name' => $taskData['title'],
+                    'target' => 30, // Default target
+                    'is_active' => true,
+                    'book_id' => $taskData['book_id'] ?? null,
+                ]);
+                $createdHabits[] = $habit;
+            } else {
+                // Create task
+                $task = Task::create($taskData);
+                $createdTasks[] = $task;
+            }
+        }
+
+        return response()->json([
+            'message' => 'Tasks and habits created successfully!',
+            'tasks' => $createdTasks,
+            'habits' => $createdHabits,
+        ]);
+    }
 }

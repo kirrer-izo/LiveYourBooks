@@ -20,8 +20,6 @@ class DashboardController extends Controller
         // Basic stats
         $stats = [
             'total_books' => Book::where('user_id', $userId)->count(),
-            'books_reading' => Book::where('user_id', $userId)->where('progress', '<', 100)->count(),
-            'books_completed' => Book::where('user_id', $userId)->where('progress', 100)->count(),
             'total_tasks' => Task::where('user_id', $userId)->count(),
             'tasks_completed' => Task::where('user_id', $userId)->where('is_completed', true)->count(),
             'tasks_pending' => Task::where('user_id', $userId)->where('is_completed', false)->count(),
@@ -34,7 +32,7 @@ class DashboardController extends Controller
         $recentBooks = Book::where('user_id', $userId)
             ->orderByDesc('updated_at')
             ->limit(5)
-            ->get(['id', 'title', 'author', 'progress', 'updated_at']);
+            ->get(['id', 'title', 'author', 'updated_at']);
             
         $recentTasks = Task::where('user_id', $userId)
             ->with(['book:id,title'])
@@ -60,9 +58,9 @@ class DashboardController extends Controller
         // Weekly progress data for charts
         $weeklyData = $this->getWeeklyProgressData($userId);
         
-        // Reading progress by genre
+        // Books by genre
         $genreProgress = Book::where('user_id', $userId)
-            ->select('genre', DB::raw('COUNT(*) as count'), DB::raw('AVG(progress) as avg_progress'))
+            ->select('genre', DB::raw('COUNT(*) as count'))
             ->groupBy('genre')
             ->get();
         

@@ -20,7 +20,9 @@ class Book extends Model
         'genre',
         'life_area',
         'cover_img',
-        'progress',
+        'file_path',
+        'file_type',
+        'file_size',
         'is_completed',
     ];
 

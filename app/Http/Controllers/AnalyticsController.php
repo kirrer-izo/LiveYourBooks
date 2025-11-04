@@ -15,14 +15,11 @@ class AnalyticsController extends Controller
     {
         $userId = Auth::id();
 
-        // Reading progress: average book progress and distribution
-        $readingProgress = [
-            'average' => (float) (Book::where('user_id', $userId)->avg('progress') ?? 0),
-            'completed' => (int) Book::where('user_id', $userId)->where('progress', 100)->count(),
-            'in_progress' => (int) Book::where('user_id', $userId)->where('progress', '>', 0)->where('progress', '<', 100)->count(),
-            'not_started' => (int) Book::where('user_id', $userId)->where(function ($q) {
-                $q->whereNull('progress')->orWhere('progress', 0);
-            })->count(),
+        // Books statistics
+        $booksStats = [
+            'total' => (int) Book::where('user_id', $userId)->count(),
+            'completed' => (int) Book::where('user_id', $userId)->where('is_completed', true)->count(),
+            'in_progress' => (int) Book::where('user_id', $userId)->where('is_completed', false)->count(),
         ];
 
         // Habit consistency: derive a simple percentage from last_completed recency and streak
@@ -82,14 +79,14 @@ class AnalyticsController extends Controller
 
         // Simple achievements
         $achievements = [
-            [ 'icon' => 'book', 'label' => 'Book Worm', 'desc' => 'Read 5 books', 'unlocked' => $readingProgress['completed'] >= 5 ],
+            [ 'icon' => 'book', 'label' => 'Book Worm', 'desc' => 'Upload 5 books', 'unlocked' => $booksStats['total'] >= 5 ],
             [ 'icon' => 'zap', 'label' => '7-Day Streak', 'desc' => 'Consistent for a week', 'unlocked' => $habits->max('streak') >= 7 ],
             [ 'icon' => 'edit', 'label' => 'Reflective', 'desc' => '10 journal entries', 'unlocked' => Journal::where('user_id', $userId)->count() >= 10 ],
             [ 'icon' => 'check-circle', 'label' => 'Task Master', 'desc' => 'Completed 20 tasks', 'unlocked' => Task::where('user_id', $userId)->where('is_completed', true)->count() >= 20 ],
         ];
 
         return inertia('Analytics/Index', [
-            'readingProgress' => $readingProgress,
+            'booksStats' => $booksStats,
             'habitConsistency' => $habitConsistency,
             'weeklyData' => $weeklyData,
             'achievements' => $achievements,

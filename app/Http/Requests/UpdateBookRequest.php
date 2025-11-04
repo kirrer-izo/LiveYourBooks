@@ -11,7 +11,7 @@ class UpdateBookRequest extends FormRequest
      */
     public function authorize(): bool
     {
-        return false;
+        return true;
     }
 
     /**
@@ -22,7 +22,23 @@ class UpdateBookRequest extends FormRequest
     public function rules(): array
     {
         return [
-            //
+            'title' => ['required', 'string', 'max:255'],
+            'author' => ['nullable', 'string', 'max:255'],
+            'genre' => ['nullable', 'string', 'in:Fiction,Non-fiction,Biography,Self-help,Philosophy,Spirituality,Science,History,Poetry,Business,Personal Development'],
+            'life_area' => ['nullable', 'string', 'in:Health,Relationships,Career,Finance,Spirituality,Personal Growth,Emotional Wellbeing,Productivity,Mindfulness,Purpose'],
+            'cover_img' => ['nullable', 'image', 'mimes:jpeg,png,jpg,gif', 'max:2048'],
+        ];
+    }
+
+    public function messages(): array
+    {
+        return [
+            'title.required' => 'Book title is required.',
+            'title.max' => 'Book title must not exceed 255 characters.',
+            'author.max' => 'Author name must not exceed 255 characters.',
+            'cover_img.image' => 'Cover image must be an image file.',
+            'cover_img.mimes' => 'Cover image must be a JPEG, PNG, JPG, or GIF file.',
+            'cover_img.max' => 'Cover image must not exceed 2MB.',
         ];
     }
 }

@@ -3,7 +3,6 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
-use GuzzleHttp\Client;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Auth;
 use App\Models\Conversation;
@@ -12,10 +11,7 @@ use App\Models\Book;
 use App\Models\Mentor;
 use App\Models\Journal;
 use App\Models\Task;
-use GuzzleHttp\Exception\TransferException;
-use GuzzleHttp\Exception\ConnectException;
-use GuzzleHttp\Exception\ClientException;
-use GuzzleHttp\Exception\ServerException;
+use App\Services\GeminiAIService;
 use Illuminate\Support\Str;
 
 class AIChatController extends Controller
@@ -92,75 +88,16 @@ class AIChatController extends Controller
             'book_id' => 'required|integer|exists:books,id',
         ]);
 
-        $userId = Auth::id();
-        $book = Book::where('user_id', $userId)->findOrFail($request->input('book_id'));
-
-        $apiKey = env('OPENAI_API_KEY')
-            ?: config('services.openai.key')
-            ?: config('services.slack.openai.aiapi_key');
-        if (!$apiKey) {
-            return response()->json(['error' => 'Missing OPENAI_API_KEY'], 500);
-        }
-
-        $model = config('services.openai.model') ?: 'gpt-3.5-turbo';
-
-        // Build context for the book
-        $bookContext = "Book: {$book->title}";
-        if ($book->author) {
-            $bookContext .= " by {$book->author}";
-        }
-        if ($book->genre) {
-            $bookContext .= " (Genre: {$book->genre})";
-        }
-        if ($book->life_area) {
-            $bookContext .= " (Life Area: {$book->life_area})";
-        }
-
-        $system = "You are an AI assistant that helps users create actionable tasks based on book content. 
-Given a book, generate 5-7 practical, specific tasks that would help someone apply the key concepts from this book to their daily life.
-
-Rules:
-- Each task should be actionable and specific
-- Tasks should be achievable within 1-2 weeks
-- Focus on practical application of the book's main concepts
-- Vary the difficulty and time commitment
-- Format as a simple numbered list
-- Keep each task title under 100 characters
-- Make tasks relevant to personal development and growth
-
-Book Context: {$bookContext}";
-
-        $prompt = "Generate actionable tasks based on the key concepts and teachings from this book. Focus on practical steps someone could take to implement the book's ideas in their daily life.";
-
         try {
-            $client = new Client([
-                'base_uri' => 'https://api.openai.com',
-                'timeout' => 30,
-                'connect_timeout' => 10,
-            ]);
-
-            $response = $client->post('/v1/chat/completions', [
-                'headers' => [
-                    'Authorization' => 'Bearer ' . $apiKey,
-                    'Content-Type' => 'application/json',
-                ],
-                'json' => [
-                    'model' => $model,
-                    'messages' => [
-                        ['role' => 'system', 'content' => $system],
-                        ['role' => 'user', 'content' => $prompt],
-                    ],
-                    'temperature' => 0.7,
-                    'max_tokens' => 600,
-                ],
-            ]);
-
-            $data = json_decode((string) $response->getBody(), true);
-            $suggestions = $data['choices'][0]['message']['content'] ?? '';
-
+            $geminiService = new GeminiAIService();
+            $result = $geminiService->generateTaskSuggestions($request->input('book_id'));
+            
             // Parse the suggestions and create tasks
-            $lines = preg_split('/\r?\n/', $suggestions);
+            $lines = preg_split('/\r?\n/', $result['reply']);
             $tasks = [];
+            $userId = Auth::id();
+            $book = Book::where('user_id', $userId)->findOrFail($request->input('book_id'));
+            
             foreach ($lines as $line) {
                 $trim = trim($line);
                 if ($trim === '') continue;
@@ -185,8 +122,8 @@ Book Context: {$bookContext}";
                 'Generated ' . count($tasks) . ' task suggestions successfully! Check your Tasks page to see them.'
             );
 
-        } catch (\Throwable $e) {
-            Log::error('AI task suggestion error', ['error' => $e->getMessage()]);
+        } catch (\Exception $e) {
+            Log::error('Gemini AI task suggestion error', ['error' => $e->getMessage()]);
             return redirect()->back()->with('error', 
                 'Failed to generate task suggestions: ' . $e->getMessage()
             );
@@ -268,65 +205,6 @@ Book Context: {$bookContext}";
         $mentorId = $request->input('mentor_id');
         $conversationId = $request->input('conversation_id');
 
-        $apiKey = env('OPENAI_API_KEY')
-            ?: config('services.openai.key')
-            ?: config('services.slack.openai.aiapi_key');
-        if (!$apiKey) {
-            return response()->json(['error' => 'Missing OPENAI_API_KEY'], 500);
-        }
-
-        $model = config('services.openai.model') ?: 'gpt-3.5-turbo';
-
-        // Use first author if multiple delimited by commas/ampersands
-        if ($mentorName) {
-            $first = preg_split('/\s*[,&]\s+|\s+and\s+/i', $mentorName);
-            $mentorName = trim($first[0] ?? $mentorName);
-        }
-
-        // Try to fetch persona/tone from Mentor model when mentor_id provided (optional fields)
-        $personaPrompt = '';
-        $tone = '';
-        if (!empty($mentorId)) {
-            $mentorRow = Mentor::find($mentorId);
-            if ($mentorRow) {
-                $personaPrompt = (string) ($mentorRow->persona_prompt ?? '');
-                $tone = (string) ($mentorRow->tone ?? '');
-            }
-        }
-
-        // Build book context snippet
-        $bookContext = '';
-        if ($bookName) {
-            $bookContext = "Book Context: {$bookName}";
-            // If we have a book id, we likely have author field via $book
-            if (isset($book) && !empty($book->author)) {
-                $bookContext .= " — Author: {$book->author}";
-            }
-            $bookContext .= "\n";
-        }
-
-        // Default persona if none provided
-        if (!$personaPrompt && $mentorName) {
-            $personaPrompt = "Emulate the style of {$mentorName}. Prioritize clarity, practicality, and evidence-informed reasoning.";
-        }
-
-        // Tone line
-        $toneLine = $tone ? ("Tone: " . $tone . "\n") : '';
-
-        $system = trim(implode("\n", array_filter([
-            $mentorName ? "You are acting as {$mentorName}." : "You are an AI mentor.",
-            $personaPrompt ?: null,
-            $bookContext ?: null,
-            $toneLine ?: null,
-            "Rules:",
-            "- Ground advice in key principles from the selected book when relevant.",
-            "- Give clear, actionable steps or checklists.",
-            "- Be concise; avoid long paragraphs.",
-            "- Encourage reflection and small experiments.",
-            "- Do not provide therapy or medical advice; redirect to professionals if needed.",
-            "- Structure: brief summary, then numbered steps, then a short nudge.",
-        ])));
-
         try {
             // Resolve book/mentor display names if IDs are provided
             if ($bookId) {
@@ -360,83 +238,24 @@ Book Context: {$bookContext}";
                 'content' => $prompt,
             ]);
 
-            $timeout = (float) (env('OPENAI_TIMEOUT', 30));
-            $connectTimeout = (float) (env('OPENAI_CONNECT_TIMEOUT', 10));
-            $proxy = env('OPENAI_PROXY'); // e.g. http://user:pass@host:port
+            // Use Gemini AI service
+            $geminiService = new GeminiAIService();
+            $result = $geminiService->generateBookResponse($prompt, $bookId, $conversation->id);
 
-            $client = new Client([
-                'base_uri' => 'https://api.openai.com',
-                'timeout' => $timeout,
-                'connect_timeout' => $connectTimeout,
-                'proxy' => $proxy ?: null,
-            ]);
-
-            $payload = [
-                'model' => $model,
-                'messages' => [
-                    ['role' => 'system', 'content' => $system],
-                    ['role' => 'user', 'content' => (string)$prompt],
-                ],
-                'temperature' => 0.7,
-                'max_tokens' => 500,
-            ];
-
-            $maxAttempts = 3;
-            $attempt = 0;
-            $response = null;
-            while ($attempt < $maxAttempts) {
-                $attempt++;
-                try {
-                    $response = $client->post('/v1/chat/completions', [
-                        'headers' => [
-                            'Authorization' => 'Bearer ' . $apiKey,
-                            'Content-Type' => 'application/json',
-                        ],
-                        'json' => $payload,
-                    ]);
-                    break; // success
-                } catch (ClientException $cex) {
-                    $code = $cex->getResponse() ? $cex->getResponse()->getStatusCode() : 400;
-                    $body = $cex->getResponse() ? (string) $cex->getResponse()->getBody() : '';
-                    Log::error('OpenAI client error', ['attempt' => $attempt, 'code' => $code, 'body' => $body]);
-                    return response()->json(['error' => "AI client error ($code): " . substr($body, 0, 300)], $code);
-                } catch (ServerException $sex) {
-                    $code = $sex->getResponse() ? $sex->getResponse()->getStatusCode() : 500;
-                    $body = $sex->getResponse() ? (string) $sex->getResponse()->getBody() : '';
-                    Log::warning('OpenAI server error', ['attempt' => $attempt, 'code' => $code, 'body' => $body]);
-                    // retryable
-                } catch (ConnectException $ce) {
-                    Log::warning('OpenAI connect exception', ['attempt' => $attempt, 'error' => $ce->getMessage()]);
-                } catch (TransferException $te) {
-                    // Retry 5xx and timeouts
-                    $code = method_exists($te, 'getCode') ? (int) $te->getCode() : 0;
-                    Log::warning('OpenAI transfer exception', ['attempt' => $attempt, 'code' => $code, 'error' => $te->getMessage()]);
-                    if ($code && $code < 500) {
-                        throw $te; // do not retry 4xx
-                    }
-                }
-                // Exponential backoff: 200ms, 400ms
-                usleep(200000 * $attempt);
-            }
-            if (!$response) {
-                return response()->json(['error' => 'AI service is temporarily unreachable. Please try again.'], 503);
-            }
-
-            $data = json_decode((string) $response->getBody(), true);
-            $text = $data['choices'][0]['message']['content'] ?? '';
             // Save assistant reply
             Message::create([
                 'conversation_id' => $conversation->id,
                 'role' => 'assistant',
-                'content' => $text,
+                'content' => $result['reply'],
             ]);
             $conversation->update(['last_message_at' => now()]);
 
             return response()->json([
-                'reply' => $text,
+                'reply' => $result['reply'],
                 'conversation_id' => $conversation->id,
             ]);
-        } catch (\Throwable $e) {
+
+        } catch (\Exception $e) {
             Log::error('AI chat error', ['error' => $e->getMessage()]);
             return response()->json(['error' => 'AI service error: ' . $e->getMessage()], 500);
         }

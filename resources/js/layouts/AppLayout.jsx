@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Bell, Sun, Moon, ChevronLeft, ChevronRight, Home, Book, Brain, BookOpenCheck, PersonStanding, Notebook, ChartSpline, User } from "lucide-react";
+import { Bell, Sun, Moon, ChevronLeft, ChevronRight, Home, Book, Brain, BookOpenCheck, PersonStanding, Notebook, ChartSpline, User, Sparkles } from "lucide-react";
 import { Link, usePage, router } from "@inertiajs/react";
 
 export default function AppLayout({ children }) {
@@ -27,6 +27,7 @@ export default function AppLayout({ children }) {
     { name: "Dashboard", href: '/dashboard', icon: <Home className="mr-3" /> },
     { name: "Books", href: '/books', icon: <Book className="mr-3" /> },
     { name: "AI Mentor", href: '/mentor/chat', icon: <Brain className="mr-3" /> },
+    { name: "AI Features", href: '/ai/features', icon: <Sparkles className="mr-3" /> },
     { name: "Task Generator", href: '/tasks', icon: <BookOpenCheck className="mr-3" /> },
     { name: "Habit Tracker", href: '/habits', icon: <PersonStanding className="mr-3" /> },
     { name: "Journal", href: '/journals', icon: <Notebook className="mr-3" /> },

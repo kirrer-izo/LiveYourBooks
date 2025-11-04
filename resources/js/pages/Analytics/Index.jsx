@@ -5,13 +5,11 @@ import { Head, usePage } from "@inertiajs/react";
 const Index = () => {
     const { props } = usePage();
     const {
-        readingProgress = { average: 0, completed: 0, in_progress: 0, not_started: 0 },
+        booksStats = { total: 0, completed: 0, in_progress: 0 },
         habitConsistency = [],
         weeklyData = [],
         achievements = [],
     } = props || {};
-
-    const avgProgress = Math.round(readingProgress.average || 0);
     const habitsToShow = (habitConsistency || []).slice(0, 3);
     const habitColors = [
         { bar: "bg-indigo-600" },
@@ -40,14 +38,14 @@ const Index = () => {
 
                     <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6 mb-6 sm:mb-8">
                         <div className="bg-white p-4 sm:p-6 rounded-lg shadow-sm border border-gray-100">
-                            <h3 className="text-lg font-semibold mb-4">Reading Progress</h3>
+                            <h3 className="text-lg font-semibold mb-4">Books Statistics</h3>
                             <div className="h-56 sm:h-64 md:h-72 flex items-center justify-center">
                                 <div className="text-center">
                                     <div className="w-32 h-32 sm:w-40 sm:h-40 mx-auto mb-4 rounded-full border-8 border-indigo-100 flex items-center justify-center">
-                                        <span className="text-3xl font-bold text-indigo-600">{avgProgress}%</span>
+                                        <span className="text-3xl font-bold text-indigo-600">{booksStats.total || 0}</span>
                                     </div>
                                     <p className="text-gray-600">
-                                        {readingProgress.completed} completed • {readingProgress.in_progress} in progress
+                                        {booksStats.completed || 0} completed • {booksStats.in_progress || 0} in progress
                                     </p>
                                 </div>
                             </div>

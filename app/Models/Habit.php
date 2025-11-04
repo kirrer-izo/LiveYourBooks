@@ -18,6 +18,7 @@ class Habit extends Model
         'name',
         'streak',
         'target',
+        'frequency',
         'last_completed',
         'is_active',
         'task_id',
@@ -49,6 +50,11 @@ class Habit extends Model
     public function tasks(): HasMany
     {
         return $this->hasMany(Task::class);
+    }
+
+    public function completions(): HasMany
+    {
+        return $this->hasMany(HabitCompletion::class);
     }
 
     /**

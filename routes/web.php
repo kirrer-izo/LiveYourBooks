@@ -8,7 +8,9 @@ use App\Http\Controllers\AnalyticsController;
 use App\Http\Controllers\JournalController;
 use App\Http\Controllers\TaskController;
 use App\Http\Controllers\HabitController;
+use App\Http\Controllers\ThinkerController;
 use App\Http\Controllers\NotificationController;
+use App\Http\Controllers\AIFeaturesController;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 
@@ -73,10 +75,17 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::resource('journals', JournalController::class);
     Route::resource('tasks', TaskController::class);
     Route::resource('habits', HabitController::class);
+    Route::resource('thinkers', ThinkerController::class);
+    
+    // Book specific routes
+    Route::get('/books/{book}/download', [BookController::class, 'download'])->name('books.download');
     
     // Additional endpoints
     Route::post('/tasks/{task}/toggle', [TaskController::class, 'toggle'])->name('tasks.toggle');
+    Route::post('/api/tasks/bulk-create', [TaskController::class, 'bulkCreate'])->name('tasks.bulk-create');
     Route::post('/habits/{habit}/checkin', [HabitController::class, 'checkIn'])->name('habits.checkin');
+    Route::post('/thinkers/{thinker}/toggle', [ThinkerController::class, 'toggle'])->name('thinkers.toggle');
+    Route::get('/thinkers/available', [ThinkerController::class, 'available'])->name('thinkers.available');
     
     // Notification preferences
     Route::get('/api/notifications/preferences', [NotificationController::class, 'getPreferences'])->name('notifications.preferences');
@@ -87,13 +96,25 @@ Route::middleware(['auth', 'verified'])->group(function () {
             ->select('id','title','author')
             ->orderBy('title')
             ->get();
-        $mentorNames = \App\Models\Book::where('user_id', \Illuminate\Support\Facades\Auth::id())
+        
+        // Get authors from books
+        $bookAuthors = \App\Models\Book::where('user_id', \Illuminate\Support\Facades\Auth::id())
             ->whereNotNull('author')
             ->where('author', '!=', '')
             ->select('author')
             ->distinct()
             ->orderBy('author')
-            ->pluck('author');
+            ->pluck('author')
+            ->toArray();
+        
+        // Get thinkers from ThinkerType enum
+        $thinkerTypes = \App\Enums\ThinkerType::getPredefinedThinkers();
+        $thinkerNames = array_map(fn($type) => $type->getDisplayName(), $thinkerTypes);
+        
+        // Combine and sort all authors/thinkers
+        $mentorNames = array_unique(array_merge($bookAuthors, $thinkerNames));
+        sort($mentorNames);
+        
         return Inertia::render('Mentor/Chat', [
             'books' => $books,
             'mentors' => $mentorNames,
@@ -102,7 +123,23 @@ Route::middleware(['auth', 'verified'])->group(function () {
     
     // Analytics page
     Route::get('/analytics', [AnalyticsController::class, 'index'])->name('analytics');
-    Route::get('/profile', fn() => Inertia::render('Profile/Index'))->name('profile');
+    // Profile routes
+    Route::get('/profile', [\App\Http\Controllers\ProfileController::class, 'index'])->name('profile');
+    Route::post('/profile', [\App\Http\Controllers\ProfileController::class, 'update'])->name('profile.update');
+    Route::post('/profile/password', [\App\Http\Controllers\ProfileController::class, 'updatePassword'])->name('profile.password.update');
+    
+    // AI Features
+    Route::get('/ai/features', [AIFeaturesController::class, 'index'])->name('ai.features');
+    Route::post('/ai/generate-summary', [AIFeaturesController::class, 'generateSummary'])->name('ai.generate-summary');
+    Route::post('/ai/generate-advice', [AIFeaturesController::class, 'generateAdvice'])->name('ai.generate-advice');
+    Route::post('/ai/save-advice-to-journal', [AIFeaturesController::class, 'saveAdviceToJournal'])->name('ai.save-advice-to-journal');
+    Route::post('/ai/generate-tasks-from-advice', [AIFeaturesController::class, 'generateTasksFromAdvice'])->name('ai.generate-tasks-from-advice');
+    Route::post('/ai/generate-routine', [AIFeaturesController::class, 'generateRoutine'])->name('ai.generate-routine');
+    Route::post('/ai/customize-routine', [AIFeaturesController::class, 'customizeRoutine'])->name('ai.customize-routine');
+    Route::get('/ai/time-suggestions', [AIFeaturesController::class, 'getTimeSuggestions'])->name('ai.time-suggestions');
+    Route::post('/ai/save-routine-template', [AIFeaturesController::class, 'saveRoutineTemplate'])->name('ai.save-routine-template');
+    Route::post('/ai/generate-habit-suggestions', [AIFeaturesController::class, 'generateHabitSuggestions'])->name('ai.generate-habit-suggestions');
+    Route::post('/ai/create-habit', [AIFeaturesController::class, 'createHabitFromSuggestion'])->name('ai.create-habit');
 });
 
 

@@ -6,7 +6,7 @@ const Create = ({ genres = [], lifeAreas = [] }) => {
     const { data, setData, post, processing, errors, reset } = useForm({
         genre: '',
         life_area: '',
-        cover_img: null,
+        book_file: null,
     });
 
     const handleSubmit = (e) => {
@@ -19,7 +19,7 @@ const Create = ({ genres = [], lifeAreas = [] }) => {
     };
 
     const handleFileChange = (e) => {
-        setData('cover_img', e.target.files[0]);
+        setData('book_file', e.target.files[0]);
     };
 
     return (
@@ -75,7 +75,7 @@ const Create = ({ genres = [], lifeAreas = [] }) => {
                                 className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
                             />
                             <p className="text-xs text-gray-500 mt-1">Upload a book PDF. Title and author will be extracted automatically.</p>
-                            {errors.cover_img && <p className="text-red-500 text-sm mt-1">{errors.cover_img}</p>}
+                            {errors.book_file && <p className="text-red-500 text-sm mt-1">{errors.book_file}</p>}
                         </div>
                         <div className="flex justify-end space-x-3 pt-4">
                             <Link

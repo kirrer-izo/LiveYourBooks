@@ -4,12 +4,6 @@ import { Head, Link, router } from "@inertiajs/react";
 
 
 const Index = ({books, filters, genres = [], lifeAreas = []}) => {
-
-//     const books = [
-//   { id: 1, title: "Atomic Habits", author: "James Clear", progress: 75, genre: "Self-Help", lifeArea: "Discipline"},
-//   { id: 2, title: "Deep Work", author: "Cal Newport", progress: 30, genre: "Productivity", lifeArea: "Work"},
-//   { id: 3, title: "The Power of Now", author: "Eckhart Tolle", progress: 100, genre: "Spirituality", lifeArea: "Mindfulness"},
-// ];
     const list = Array.isArray(books?.data) ? books.data : [];
     const links = books?.links || [];
     
@@ -17,7 +11,7 @@ const Index = ({books, filters, genres = [], lifeAreas = []}) => {
     const [filter, setFilter] = React.useState(filters?.status || 'all');
     const [showAddBookModal, setShowAddBookModal] = React.useState(false);
     const [category, setCategory] = React.useState(filters?.category || 'all');
-    const [generatingTasks, setGeneratingTasks] = React.useState({});
+    const [deletingBook, setDeletingBook] = React.useState({});
     const categories = React.useMemo(() => ['all', ...genres, ...lifeAreas], [genres, lifeAreas]);
 
     // Push query params to backend when filters change
@@ -35,20 +29,23 @@ const Index = ({books, filters, genres = [], lifeAreas = []}) => {
     }, [searchTerm, filter, category]);
     const filteredBooks = list;
 
-    const generateTasks = (bookId) => {
-        setGeneratingTasks(prev => ({ ...prev, [bookId]: true }));
+    const handleDelete = (bookId, bookTitle) => {
+        if (!confirm(`Are you sure you want to delete "${bookTitle}"?`)) {
+            return;
+        }
         
-        // Use Inertia router for form submission to handle flash messages
-        router.post(`/api/books/${bookId}/generate-tasks`, 
-            { book_id: bookId },
-            {
-                onFinish: () => {
-                    setGeneratingTasks(prev => ({ ...prev, [bookId]: false }));
-                },
-                preserveState: true,
-                preserveScroll: true,
-            }
-        );
+        setDeletingBook(prev => ({ ...prev, [bookId]: true }));
+        
+        router.delete(`/books/${bookId}`, {
+            onFinish: () => {
+                setDeletingBook(prev => {
+                    const newState = { ...prev };
+                    delete newState[bookId];
+                    return newState;
+                });
+            },
+            preserveState: false,
+        });
     };
 
 
@@ -137,31 +134,21 @@ const Index = ({books, filters, genres = [], lifeAreas = []}) => {
                                     <div className="p-4">
                                         <h3 className="font-semibold text-lg">{book.title}</h3>
                                         <p className="text-gray-600 text-sm">{book.author}</p>
-                                        <div className="mt-3">
-                                            <div className="flex justify-between text-sm mb-1">
-                                                <span>Progress</span>
-                                                <span>{book.progress}%</span>
+                                        <div className="mt-4 flex flex-col space-y-2">
+                                            <div className="flex space-x-2">
+                                                <Link
+                                                    href={`/books/${book.id}/edit`}
+                                                    className="flex-1 py-1 px-2 bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-300 rounded text-sm hover:bg-blue-200 dark:hover:bg-blue-800 text-center"
+                                                >
+                                                    Edit
+                                                </Link>
                                             </div>
-                                            <div className="w-full bg-gray-200 rounded-full h-2">
-                                                <div 
-                                                    className="bg-indigo-600 h-2 rounded-full" 
-                                                    style={{ width: `${book.progress}%` }}
-                                                ></div>
-                                            </div>
-                                        </div>
-                                        <div className="mt-4 flex space-x-2">
-                                            <Link 
-                                                href={`/books/${book.id}`}
-                                                className="flex-1 py-1 px-2 bg-indigo-100 dark:bg-indigo-900 text-indigo-700 dark:text-indigo-300 rounded text-sm hover:bg-indigo-200 dark:hover:bg-indigo-800 text-center"
-                                            >
-                                                View
-                                            </Link>
                                             <button 
-                                                onClick={() => generateTasks(book.id)}
-                                                disabled={generatingTasks[book.id]}
-                                                className="flex-1 py-1 px-2 bg-green-100 dark:bg-green-900 text-green-700 dark:text-green-300 rounded text-sm hover:bg-green-200 dark:hover:bg-green-800 disabled:opacity-50 disabled:cursor-not-allowed"
+                                                onClick={() => handleDelete(book.id, book.title)}
+                                                disabled={deletingBook[book.id]}
+                                                className="w-full py-1 px-2 bg-red-100 dark:bg-red-900 text-red-700 dark:text-red-300 rounded text-sm hover:bg-red-200 dark:hover:bg-red-800 disabled:opacity-50 disabled:cursor-not-allowed"
                                             >
-                                                {generatingTasks[book.id] ? 'Generating...' : 'AI Tasks'}
+                                                {deletingBook[book.id] ? 'Deleting...' : 'Delete'}
                                             </button>
                                         </div>
                                     </div>
