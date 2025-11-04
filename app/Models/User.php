@@ -89,4 +89,22 @@ class User extends Authenticatable
     {
         return $this->hasMany(Thinker::class);
     }
+
+    public function notificationPreference()
+    {
+        return $this->hasOne(NotificationPreference::class);
+    }
+
+    /**
+     * Get or create notification preferences for the user
+     */
+    public function getNotificationPreferences()
+    {
+        return $this->notificationPreference ?? $this->notificationPreference()->create(
+            array_merge(
+                NotificationPreference::getDefaults(),
+                ['user_id' => $this->id]
+            )
+        );
+    }
 }

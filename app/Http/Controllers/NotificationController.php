@@ -3,41 +3,35 @@
 namespace App\Http\Controllers;
 
 use App\Models\User;
-use App\Models\Habit;
-use App\Models\Task;
-use App\Models\Journal;
+use App\Services\NotificationService;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Notification;
-use App\Notifications\HabitReminder;
-use App\Notifications\JournalReminder;
-use App\Notifications\TaskDueReminder;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 
 class NotificationController extends Controller
 {
+    protected $notificationService;
+
+    public function __construct(NotificationService $notificationService)
+    {
+        $this->notificationService = $notificationService;
+    }
+
     /**
      * Send habit reminders to users
      */
     public function sendHabitReminders()
     {
-        $users = User::whereHas('habits', function ($query) {
-            $query->where('is_active', true);
-        })->get();
-        
-        foreach ($users as $user) {
-            $incompleteHabits = $user->habits()
-                ->where('is_active', true)
-                ->get()
-                ->filter(function ($habit) {
-                    return !$habit->isCompletedToday();
-                });
-            
-            if ($incompleteHabits->count() > 0) {
-                $user->notify(new HabitReminder($incompleteHabits));
-            }
+        try {
+            $count = $this->notificationService->sendHabitReminders();
+            return response()->json([
+                'message' => 'Habit reminders sent successfully',
+                'sent_count' => $count
+            ]);
+        } catch (\Exception $e) {
+            Log::error('Failed to send habit reminders', ['error' => $e->getMessage()]);
+            return response()->json(['error' => 'Failed to send habit reminders'], 500);
         }
-        
-        return response()->json(['message' => 'Habit reminders sent successfully']);
     }
     
     /**
@@ -45,15 +39,16 @@ class NotificationController extends Controller
      */
     public function sendJournalReminders()
     {
-        $users = User::whereDoesntHave('journals', function ($query) {
-            $query->whereDate('entry_date', today());
-        })->get();
-        
-        foreach ($users as $user) {
-            $user->notify(new JournalReminder());
+        try {
+            $count = $this->notificationService->sendJournalReminders();
+            return response()->json([
+                'message' => 'Journal reminders sent successfully',
+                'sent_count' => $count
+            ]);
+        } catch (\Exception $e) {
+            Log::error('Failed to send journal reminders', ['error' => $e->getMessage()]);
+            return response()->json(['error' => 'Failed to send journal reminders'], 500);
         }
-        
-        return response()->json(['message' => 'Journal reminders sent successfully']);
     }
     
     /**
@@ -61,23 +56,16 @@ class NotificationController extends Controller
      */
     public function sendTaskDueReminders()
     {
-        $users = User::whereHas('tasks', function ($query) {
-            $query->where('is_completed', false)
-                  ->whereDate('due_date', '<=', now()->addDay());
-        })->get();
-        
-        foreach ($users as $user) {
-            $dueTasks = $user->tasks()
-                ->where('is_completed', false)
-                ->whereDate('due_date', '<=', now()->addDay())
-                ->get();
-            
-            if ($dueTasks->count() > 0) {
-                $user->notify(new TaskDueReminder($dueTasks));
-            }
+        try {
+            $count = $this->notificationService->sendTaskDueReminders();
+            return response()->json([
+                'message' => 'Task due reminders sent successfully',
+                'sent_count' => $count
+            ]);
+        } catch (\Exception $e) {
+            Log::error('Failed to send task reminders', ['error' => $e->getMessage()]);
+            return response()->json(['error' => 'Failed to send task reminders'], 500);
         }
-        
-        return response()->json(['message' => 'Task due reminders sent successfully']);
     }
     
     /**
@@ -86,13 +74,20 @@ class NotificationController extends Controller
     public function getPreferences()
     {
         $user = Auth::user();
+        $preferences = $user->getNotificationPreferences();
         
         return response()->json([
-            'preferences' => $user->notification_preferences ?? [
-                'habit_reminders' => true,
-                'journal_reminders' => true,
-                'task_reminders' => true,
-                'reminder_time' => '09:00',
+            'preferences' => [
+                'habit_reminders_enabled' => $preferences->habit_reminders_enabled,
+                'habit_reminder_time' => $preferences->habit_reminder_time,
+                'habit_reminder_days' => $preferences->habit_reminder_days ?? [1, 2, 3, 4, 5, 6, 7],
+                'journal_reminders_enabled' => $preferences->journal_reminders_enabled,
+                'journal_reminder_time' => $preferences->journal_reminder_time,
+                'journal_reminder_days' => $preferences->journal_reminder_days ?? [1, 2, 3, 4, 5, 6, 7],
+                'task_reminders_enabled' => $preferences->task_reminders_enabled,
+                'task_reminder_time' => $preferences->task_reminder_time,
+                'task_reminder_days' => $preferences->task_reminder_days ?? [1, 2, 3, 4, 5, 6, 7],
+                'timezone' => $preferences->timezone,
             ]
         ]);
     }
@@ -102,23 +97,65 @@ class NotificationController extends Controller
      */
     public function updatePreferences(Request $request)
     {
-        $request->validate([
-            'habit_reminders' => 'boolean',
-            'journal_reminders' => 'boolean',
-            'task_reminders' => 'boolean',
-            'reminder_time' => 'required|date_format:H:i',
+        $validated = $request->validate([
+            'habit_reminders_enabled' => 'boolean',
+            'habit_reminder_time' => 'required_with:habit_reminders_enabled|date_format:H:i',
+            'habit_reminder_days' => 'array',
+            'habit_reminder_days.*' => 'integer|min:1|max:7',
+            'journal_reminders_enabled' => 'boolean',
+            'journal_reminder_time' => 'required_with:journal_reminders_enabled|date_format:H:i',
+            'journal_reminder_days' => 'array',
+            'journal_reminder_days.*' => 'integer|min:1|max:7',
+            'task_reminders_enabled' => 'boolean',
+            'task_reminder_time' => 'required_with:task_reminders_enabled|date_format:H:i',
+            'task_reminder_days' => 'array',
+            'task_reminder_days.*' => 'integer|min:1|max:7',
+            'timezone' => 'string|max:255',
         ]);
         
         $user = Auth::user();
-        $user->update([
-            'notification_preferences' => $request->only([
-                'habit_reminders',
-                'journal_reminders', 
-                'task_reminders',
-                'reminder_time'
-            ])
-        ]);
+        $preferences = $user->getNotificationPreferences();
         
-        return response()->json(['message' => 'Notification preferences updated successfully']);
+        // Update preferences
+        $preferences->update($validated);
+        
+        return redirect()->route('notifications.edit')
+            ->with('success', 'Notification preferences updated successfully!');
+    }
+    
+    /**
+     * Get user's notifications
+     */
+    public function getNotifications(Request $request)
+    {
+        $user = Auth::user();
+        $notifications = $user->notifications()
+            ->orderBy('created_at', 'desc')
+            ->paginate($request->get('per_page', 15));
+        
+        return response()->json($notifications);
+    }
+    
+    /**
+     * Mark notification as read
+     */
+    public function markAsRead(Request $request, $id)
+    {
+        $user = Auth::user();
+        $notification = $user->notifications()->findOrFail($id);
+        $notification->markAsRead();
+        
+        return response()->json(['message' => 'Notification marked as read']);
+    }
+    
+    /**
+     * Mark all notifications as read
+     */
+    public function markAllAsRead()
+    {
+        $user = Auth::user();
+        $user->unreadNotifications->markAsRead();
+        
+        return response()->json(['message' => 'All notifications marked as read']);
     }
 }

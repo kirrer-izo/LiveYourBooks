@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Bell, Sun, Moon, ChevronLeft, ChevronRight, Home, Book, Brain, BookOpenCheck, PersonStanding, Notebook, ChartSpline, User, Sparkles } from "lucide-react";
+import { Bell, Settings, Sun, Moon, ChevronLeft, ChevronRight, Home, Book, Brain, BookOpenCheck, PersonStanding, Notebook, ChartSpline, User, Sparkles } from "lucide-react";
 import { Link, usePage, router } from "@inertiajs/react";
 
 export default function AppLayout({ children }) {
@@ -94,6 +94,14 @@ export default function AppLayout({ children }) {
                 <button aria-label="Notifications" className="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-600 dark:text-gray-300">
                   <Bell className="h-5 w-5" />
                 </button>
+                {/* Settings */}
+                <Link 
+                  href="/settings/notifications" 
+                  aria-label="Settings" 
+                  className="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-600 dark:text-gray-300"
+                >
+                  <Settings className="h-5 w-5" />
+                </Link>
                 {/* User */}
                 <Link href="/profile" className="flex items-center space-x-2">
                   <img src={user.avatar} alt="User" className="w-8 h-8 rounded-full" />

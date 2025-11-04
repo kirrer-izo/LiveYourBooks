@@ -1,10 +1,11 @@
 import React, { useState, useEffect } from "react";
 import AppLayout from "../../layouts/AppLayout";
-import { Head, useForm } from "@inertiajs/react";
+import { Head, useForm, Link } from "@inertiajs/react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Settings } from "lucide-react";
 
 const Index = ({ user: initialUser }) => {
     const [editMode, setEditMode] = useState(false);
@@ -77,11 +78,19 @@ const Index = ({ user: initialUser }) => {
             <Head title="Profile - Live Your Books" />
             
             <div className="container mx-auto px-4 py-8">
-                <div className="mb-8">
-                    <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Profile Settings</h1>
-                    <p className="text-gray-600 dark:text-gray-400 mt-2">
-                        Manage your account information and credentials
-                    </p>
+                <div className="mb-8 flex justify-between items-center">
+                    <div>
+                        <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Profile Settings</h1>
+                        <p className="text-gray-600 dark:text-gray-400 mt-2">
+                            Manage your account information and credentials
+                        </p>
+                    </div>
+                    <Link href="/settings/notifications">
+                        <Button variant="outline" className="flex items-center gap-2">
+                            <Settings className="h-4 w-4" />
+                            Notification Settings
+                        </Button>
+                    </Link>
                 </div>
 
                 {success && (

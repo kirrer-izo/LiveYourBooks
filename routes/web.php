@@ -87,9 +87,11 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::post('/thinkers/{thinker}/toggle', [ThinkerController::class, 'toggle'])->name('thinkers.toggle');
     Route::get('/thinkers/available', [ThinkerController::class, 'available'])->name('thinkers.available');
     
-    // Notification preferences
+    // Notification preferences (API routes)
     Route::get('/api/notifications/preferences', [NotificationController::class, 'getPreferences'])->name('notifications.preferences');
-    Route::post('/api/notifications/preferences', [NotificationController::class, 'updatePreferences'])->name('notifications.update_preferences');
+    Route::get('/api/notifications', [NotificationController::class, 'getNotifications'])->name('notifications.list');
+    Route::post('/api/notifications/{id}/read', [NotificationController::class, 'markAsRead'])->name('notifications.mark_read');
+    Route::post('/api/notifications/read-all', [NotificationController::class, 'markAllAsRead'])->name('notifications.mark_all_read');
     // Mentor Chat UI
     Route::get('/mentor/chat', function () {
         $books = \App\Models\Book::where('user_id', \Illuminate\Support\Facades\Auth::id())
