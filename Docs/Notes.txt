@@ -1,0 +1,341 @@
+ 
+SCHOOL OF SCIENCE, ENGINEERING, AND TECHNOLOGY
+
+DEPARTMENT OF COMPUTER SCIENCE & IT
+
+COMP 411 – RESEARCH PROPOSAL 1
+
+PROJECT TITLE:
+ Live Your Books
+
+ISAACK MUCHOKI
+CS/MG/1221/09/22
+
+A project submitted to the department of Computer Science and IT of Kabarak University in partial fulfillment for the award of Bsc.Computer Science degree.
+
+
+August 2025 
+
+DECLARATION
+
+I hereby declare that the work I have submitted for this project, “LIVE YOUR BOOKS”, is wholly original and has not been plagiarized or reproduced in any way. All sources of information have been acknowledged.
+Presentation by:
+Signature   ……………………………….  	Date: ……………………………….
+
+ISAACK MUCHOKI				CS/MG/1221/09/22
+ 
+RECOMMENDATION
+
+Supervisor’s Approval:
+I confirm that this project has been carried out under my supervision and is approved for submission.
+
+Signature   ……………………………….  	Date: ……………………………….  
+
+MADAM DAISY ONDWARI
+LECTURER
+DEPARTMENT OF COMPUTER SCIENCE AND INFORMATION TECHNOLOGY
+KABARAK UNIVERSITY
+ 
+DEDICATION
+
+I want to extend my sincere appreciation to my supervisor for their invaluable guidance and support. To all thinkers and authors whose wisdom shaped the foundation of this project.
+ 
+ACKNOWLEDGEMENT
+I extend my heartfelt gratitude to all those who made the Live Your Books project possible.
+To my supervisor, your continuous guidance and feedback helped shape this project into a reality.
+I appreciate the authors, thinkers, and mentors whose work inspired the core of this project. Your wisdom lives through all the interactions users have.
+ 
+ABSTRACT
+Live Your Books is a web-based self-improvement application designed to leverage the transformative power of artificial intelligence. At its core, the platform aims to fundamentally shift the paradigm from passive knowledge consumption to active, real-world applications of teachings derived from personal development books and esteemed authors.  Users engage with the system through dynamic AI-driven prompts, fostering a deeper interaction with the material. Additionally, the application provides a unique capability for users to ask highly personal questions, receiving contextualized advice that resonates with their circumstances and the specific content they are exploring.
+
+Beyond interactive mentorship, Live Your Books integrates robust functionalities essential for sustained personal growth. This includes a comprehensive journaling module, enabling users to reflect on their insights, challenges, and progress in a structured yet flexible manner. Complementing this is an intuitive personal goal-tracking system, allowing individuals to set, monitor, and achieve objectives directly linked to their journey. A key feature is the automated generation of personalized progress reports, offering users tangible evidence of their development and reinforcing positive behavioral changes. My commitment to user experience is paramount, ensuring the platform delivers a highly user-friendly and responsive interface across various devices. Ultimately, this project is dedicated to bridging the critical gap between merely reading and truly applying knowledge, empowering users to seamlessly integrate acquired knowledge into their daily lives and foster measurable self-improvement.
+
+
+Keyword:  AI mentorship, API integration, Backend development, Business understanding, Chart.js, Clean code principles, Cloud infrastructure, Coding standards, Confidentiality, Continuous integration, Dashboard, Data encryption, Data migration, Data security, Deployment ,Deployment plan, Development environment, Django, Docker, Ethical considerations, Feasibility study, Frontend development, Git ,Go-live plan, Habit tracking, Hosting, Inertia.js, Informed consent, Integration testing, Journaling, Laravel, Maintenance, MySQL, Node.js, Non-functional requirements, OpenAI API, PHP, Plotly.js, Planning, Progress summaries, Project budget, Project schedule, Prototypes, Python, Quality assurance (QA), React.js, Rollback plan, Security Software development, Stakeholder needs, System implementation, System testing, Tailwind CSS, Testing Timeline, Transparency, UI/UX design, Unit testing, User authentication, User support, Usability, Version control, Voluntary participation. 
+TABLE OF CONTENTS
+DECLARATION	i
+RECOMMENDATION	ii
+ACKNOWLEDGEMENT	iv
+ABSTRACT	v
+LIST OF FIGURES	vii
+CHAPTER ONE	1
+Introduction	1
+1.1.	Background Study	1
+1.2.	Problem Statement	2
+1.3.	Objectives	3
+1.4.	Research Questions	3
+1.5.	Significance of the Study	3
+1.6.	Scope of the Study	4
+1.7.	Proposed Modules	5
+CHAPTER TWO	9
+Literature Review	9
+2.1.	Introduction	9
+2.2.	Artificial Intelligence in Mentorship Systems	9
+2.3.	Journaling and Goal Tracking System	9
+2.4.	Digital Learning Tools	10
+2.5.	Security Considerations in the Live Your Books Application	10
+2.6.	Comparative Analysis of Related Systems	10
+2.7.	Gaps Identified	11
+2.8.	Conceptual Framework	11
+CHAPTER THREE	14
+Methodology	14
+3.1.	Introduction	14
+3.2.	Research ethodology/Research design used	14
+3.3.	Business Understanding	15
+3.4.	Design	18
+3.5.	Coding	22
+3.6.	Testing	23
+3.7.	Deployment	24
+3.8.	Research Ethics	24
+APPENDICES	25
+REFERENCES	25
+PROJECT SCHEDULE	26
+PROJECT BUDGET	27
+
+ 
+LIST OF FIGURES
+Figure 1: Concept Map	13
+Figure 2: Context Diagram	18
+Figure 3: Use Case Diagram	19
+Figure 4: Level 1 DFD	20
+Figure 5: Activity Diagram	21
+Figure 6: Class Diagram	22
+ 
+
+CHAPTER ONE
+Introduction
+This chapter presents the foundation of the project, outlining its background, the problem it seeks to address, and its objectives. Live Your Books aims to bridge the gap between passive reading and the meaningful, real-world application of knowledge. Many people read books for personal growth, but struggle to implement the ideas in their daily lives. This project leverages artificial intelligence to stimulate mentorship from renowned thinkers and authors, guiding users toward consistent self-improvement.
+1.1.	Background Study
+The contemporary landscape of personal development is characterized by a widespread commitment among individuals to continuous learning. Many actively seek to expand their knowledge base and refine their skills, frequently engaging with a diverse array of resources. This consistent pursuit of new insights underscores a societal aspiration to harness intellectual capital for personal and professional growth.
+Individuals currently manage their personal growth through a combination of established and evolving methods. This often includes active reading strategies, where key concepts are highlighted, annotated, and summarized. Many also employ manual note-taking to synthesize information and explore potential applications. The process of translating theoretical knowledge into practical action is commonly undertaken through self-reflection practices, goal setting, and habit tracking. Personal diaries, digital spreadsheets, or basic reminder applications frequently support these activities.
+The digital ecosystem further enriches this environment with a broad spectrum of specialized tools. E-reader platforms provide access to digital information, while numerous digital journaling applications offer flexible spaces for free-form writing and emotional tracking. There are also a variety of habit tracking apps that assist users in building routines and becoming more consistent. These tools are complemented by goal-setting tools that provide structured frameworks for defining objectives and charting progress. Moreover, the burgeoning field of artificial intelligence has introduced AI-powered learning assistants and conversational agents, which offer capabilities such as information retrieval and basic interactive guidance, signaling a growing trend towards intelligent support in personal development. 
+ 
+1.2.	 Problem Statement
+While books have long served as invaluable sources of wisdom and personal growth, a significant challenge persists for modern readers: the application of learned principles in their daily lives. There is a disconnect between knowledge acquisition and practical implementation.
+Firstly, readers often lack a structured system for consistent reflection, accountability, and personalized mentorship. Readers engage in active reading and manual note-taking, but without an integrated framework, the insights gained can quickly fade, leading to passive consumption rather than active transformation. The fragmented approach hinders the sustained effort required for behavioral change.
+Secondly, the current operational landscape, characterized by the use of numerous standalone applications for reading, journaling, or goal tracking, creates a disjointed experience. Users find themselves toggling between different platforms, manually attempting to connect their reading material with their reflections and actionable goals. This lack of a unified platform means that insights from a book are often detached from the tools, preventing a holistic and seamless journey from learning to doing. The absence of an integrated system also contributes to a lack of personalized interpretation of book content, as generic tools cannot adapt advice to an individual’s unique context. Consequently, there is an absence of measurable progress directly linked to the content consumed, making it difficult for users to track the real-world impact of their efforts.
+Live Your Books is designed to address these gaps. By offering a unified platform, it allows users to interact with AI mentors trained to emulate the style and advice of renowned figures, providing personalized guidance that is currently missing. Personalized prompts, robust goal-setting tools, and reflective journaling functionalities are all provided within a single environment. This approach empowers users to translate theoretical knowledge into actionable steps, bridging the divide between passive reading and meaningful, real-world application. The system’s foundation on Laravel and React, coupled with the integration of the OpenAI API, ensures a responsive, scalable, and intelligently interactive solution.
+
+1.3.	Objectives
+1.3.1.	General Objective
+To develop a self-improvement web application that helps users apply the lessons learned from books and mentors through guided interaction, journaling, and progress tracking.
+
+1.3.2.	Specific Objectives
+i.	To design a mentorship system that uses AI to simulate guidance from renowned thinkers and authors.
+ii.	To implement a journaling and goal-tracking feature tied to mentor advice and user input.
+iii.	To evaluate the system's effectiveness in enhancing personal growth through feedback and reports.
+iv.	To implement a user-friendly platform.
+1.4.	Research Questions
+i.	How can AI be used to emulate the mentorship style of thought leaders?
+ii.	How can journaling and goal tracking be structured to reflect and apply mentorship advice?
+iii.	How can user progress be measured and reported meaningfully through system feedback?
+iv.	What technologies and tools are best suited to deliver an interactive and scalable solution?
+1.5.	Significance of the Study
+Live Your Books significantly bridges the gap between theoretical knowledge and personal transformation. It contributes to encouraging the active application of knowledge from books, empowering readers with tools for self-improvement, exploring the use of AI in behavioral mentorship and self-reflection, and contributing to the field of AI-assisted habit formation and mental wellness.
+It is particularly relevant for today’s digital-native generation, who seek meaningful yet flexible ways to grow personally while engaging with technology.
+1.6.	Scope of the Study
+1.6.1.	 Scope of the study
+The Live Your Books system is primarily centered on bridging the gap between passive reading and meaningful real-world application of knowledge through AI-based mentorship. This application is designed to facilitate the practical application of knowledge derived exclusively from books and authors for personal development, intentionally excluding academic curricula, professional certifications, or general life coaching unrelated to specific literary works. The system targets readers who actively seek structured guidance in applying knowledge. Fundamentally, the system will utilize AI models for personalized mentoring and journaling support, with AI’s role confined to emulating mentor styles and providing contextualized advice and insights, rather than offering therapeutic intervention. Furthermore, the system is designed to provide a responsive user interface and optional export functionalities for personal reports. While the web-based nature of the application inherently allows for global accessibility upon wider deployment, the geographical scope of the study’s immediate user base for evaluation will be limited to individuals accessible within local academic and professional networks.
+1.6.2.	 Limitations of the study
+Despite this defined scope, certain limitations are inherent within this research and the developed system. Firstly, due to the nature of their design, AI summaries may occasionally oversimplify complex concepts from the source material. Users will be advised that AI guidance is supplementary and not a substitute for professional advice where applicable. Secondly, the system's reliance on third-party APIs means it is subject to their imposed rate limits or content restrictions, which could potentially affect the extent of AI interaction. Thirdly, the continuous operation of the system is dependent on a stable internet connection and uninterrupted availability of these third-party services, meaning disruptions may affect the application's uptime and user experience. Lastly, due to budget limitations, Live Your Books may not utilize premium APIs or a full-scale enterprise-grade cloud infrastructure. This could possibly influence the maximum concurrent user capacity or sophistication of certain features compared to commercially developed applications. 
+1.7.	Proposed Modules
+Module 1: Book Management
+This module will handle the management of personal libraries. It will include:
+●	Add Book: Allows users to input books they're reading manually.
+●	Categorization: Enables sorting by genre, author, or life area (e.g., discipline, productivity)
+Technology: Uses Laravel ORM to store book data in a relational structure.
+Module 2: AI Mentor Chat
+This module powers personalized interaction with an AI mentor based on the user's selected book or mentor. It will include:
+●	Questions: Users ask questions tied to a specific book or the chosen mentor.
+●	AI Responses: Returns advice in the selected author’s or mentor’s.
+●	Session History: Saves conversations for future reference.
+Technology: Uses OpenAI API to generate AI-driven responses.
+Module 3: Task Generator
+This module automatically suggests actionable steps based on chapters or topics from selected books. It will include:
+●	Chapter Breakdown: Extract key principles from each chapter.
+●	Task Suggestion: Convert actionable key principles into daily/weekly tasks.
+Technology: Laravel logic and prompt-based AI for task generation.
+Module 4: Habit Tracker
+This module encourages consistency through habit check-ins. It will include:
+●	Habit Creation: Allows users to create habits linked to tasks or books.
+●	Check-in System: Users mark completed habits.
+●	Streak Monitoring: Visual display of user consistency and longest streak.
+Technology: Built using Laravel with data visualization.
+Module 5: Journal and Reflections
+This module helps document their progress, thoughts, and struggles. It will include:
+●	Daily Logs: Free-form journal entries.
+●	Tags: Users tag journal entries with moods or categories.
+●	Journal History: Archive of all logs with edit/delete capability.
+Technology: Journals are stored securely with encryption and timestamps.
+Module 6: Dashboard
+This module provides an overview of the user's personal development. It will include:
+●	Progress Summary: Visual graphs for habits, tasks, and reading milestones.
+●	Streak Display: This shows how long a user has stayed on track.
+●	Book-Based Analytics: Progress tied to specific themes.
+Technology: Real-time graphs.
+Module 7: AI Integration
+This module powers all intelligent operations within the system. It will include:
+●	Summary Generator: Produces weekly insights based on journals and tasks.
+●	Advice Customizer: Provides context-sensitive advice per user situation.
+●	Routine Builder: Auto-generates daily routines.
+Technology: Integrates OpenAI.
+Module 8: Notifications
+This module keeps users engaged and reminds them of their commitments. It will include:
+●	Habit Reminders: Optional alerts to log daily habits.
+●	Journal Nudges: Prompts to reflect if no entry is made.
+●	Custom Scheduling: Users choose when to be notified.
+Technology: Laravel Notification System.
+Module 9: User Registration and Authentication
+This module will manage the creation of user accounts, login, and authentication processes. It will include:
+●	Registration: Allows users to create accounts with a name, email, and password.
+●	Authentication: Handles secure login and session management.
+●	Password Recovery: Enables password resets via secure email verification.
+Technology: Implements Laravel Breeze for authentication.
+Module 10: Profile Management
+This module enables users to manage their data and preferences. It will include:
+●	Profile Update: Users can edit their information and personal settings.
+●	Role Management: Differentiates between standard users and administrators.
+Technology: User data is stored in a MySQL database, managed with Laravel’s ORM
+ 
+CHAPTER TWO
+Literature Review
+2.1.	 Introduction
+This chapter comprehensively reviews existing literature, and relevant research is presented to establish the foundation for Live Your Books. This chapter aims to explore current technologies and frameworks surrounding digital mentorship, habit tracking, journaling, and personal growth applications. The chapter also provides an overview of relevant AI integrations, usability trends, and a comparative review of similar tools to identify research gaps and inform system design.
+2.2.	 Artificial Intelligence in Mentorship Systems
+Artificial Intelligence has significantly impacted how mentorship is delivered digitally. With the emergence of large language models like OpenAI’s GPT, AI systems can now simulate human-like conversations that provide personalized guidance. Several mental wellness and educational applications leverage AI-powered bots to provide mentorship, goal reinforcement, and check-ins. For instance, Replika and Woebot use AI chat to simulate emotional support and personal development coaching.
+AI mentors can effectively guide users through goal-oriented conversations, encourage reflection, and offer motivational nudges. However, this project aims to address the limitations of emotional depth and long-term contextual understanding by utilizing prompt-based control to simulate mentor personalities aligned with book principles. (Ruan, 2021)
+2.3.	 Journaling and Goal Tracking System
+Journaling is recognized in psychological research as a tool for personal growth. Journaling improves memory, mood, and goal clarity. (Pennebaker, J.W. 1997) Applications like Daylio and Journey use digital journaling formats to help users document progress and emotions. Modern productivity apps like Notion also combine goal-setting and journaling templates to promote mindfulness and accountability. The SMART framework (Specific, Measurable, Achievable, Realistic, and Time-bound) often guides goal setting. Structured goals improve performance significantly when progress is measured and reviewed. (Locke & Latham, 2002) By integrating habit trackers and visual dashboards, tools like Habitica and Loop enhance accountability, a pattern that will be adopted in Live Your Books.
+2.4.	Digital Learning Tools
+User-centered design must include features like consistency, responsiveness, and meaningful feedback. (Nielsen, 1994). Applications like Duolingo and Headspace have succeeded through gamified experiences, visual streaks, and clear daily goals. Live Your Books borrows these strategies by implementing a dashboard that displays habit streaks, task progress, reading milestones, and AI-guided routines.
+2.5.	Security Considerations in the Live Your Books Application
+Security is a critical component, particularly when handling sensitive personal information. Live Your Books must implement strong security measures to protect this information and maintain users' trust. This goal is to ensure functionality, data protection, and ethical AI integration.
+2.6.	 Comparative Analysis of Related Systems
+2.6.1.	Replika
+Replika is an AI companion app that engages users in emotional conversations. It provides a sense of connection and support; however, it lacks a structured mentorship approach based on specific books or goal alignment. The platform focuses on companionship rather than self-improvement.
+2.6.2.	Reflectly
+Reflectly offers mood journaling and habit tracking. It allows users to log emotions and reflect on their day; however, it does not include features for reading, task generation, or AI guidance. Its personalization is limited to mood patterns.
+2.6.3.	Headway
+Headway provides users with book summaries and motivational content. While it promotes quick knowledge acquisition, it is not interactive and does not offer tools for habit formation, journaling, or mentorship. Users consume knowledge passively.
+2.6.4.	Notion Templates
+Notion Templates are widely used for productivity, goal setting, and planning. Users create personalized dashboards for tracking habits and journaling; however, these templates require manual setup and lack conversation-style mentorship features.
+Live Your Books is designed to combine the most effective features of these platforms while addressing their limitations. It brings together AI-powered mentorship inspired by books, guided journaling, automated task generation, mentorship inspired by books and renowned thinkers, guided journaling, automated task generation, a visual dashboard, and goal tracking. All this is centered around helping users apply what they read in their lives.
+2.7.	Gaps Identified
+Despite significant advancements in personal development applications, several key gaps persist, hindering a truly integrated and effective user experience. Firstly, there remains a notable lack of dedicated book-based mentorship systems; current platforms rarely provide users with structured guidance or interactive mentorship directly tied to the specific books they are reading. Secondly, there's minimal integration between journaling functionalities and task automation, leading to a fragmented approach where goal setting and reflection are often managed in separate, disconnected applications. This separation impedes a holistic view of a user's progress from insight to action. Furthermore, existing tools often exhibit low personalization in their AI feedback, failing to adequately adjust insights or advice based on users' unique personalities, individual goals, or specific reading material they are engaging with. Finally, users frequently encounter limited exportable insights, as the ability to easily save, review, or share personalized summaries and progress reports is not a standard feature across many platforms. These collective gaps highlight the need for a more unified, personalized, and actionable approach to digital self-improvement.
+2.8.	Conceptual Framework
+The Live Your Books framework is built on three core elements: input (user action and book selection), processing (AI guidance and task generation), and output (personal progress and feedback)
+
+Key Concepts:
+●	Independent variables: AI Mentorship, Task and Habit Generation, Journaling, Reflection, and Progress Analytics.
+●	Dependent variables: Knowledge Application, Personal Growth, and User Engagement
+Relationships:
+
+AI mentorship plays a key role in enhancing knowledge application by providing personalized guidance. The AI translates abstract book ideas into practical, context-specific advice that users can apply in their daily lives.
+In parallel, task generation and habit tracking contribute directly to personal growth. As users receive daily tasks or routines derived from the principles of selected books and consistently check in using the habit tracker, they reinforce behavioral change.
+The journaling module also supports both personal growth and user engagement. Great self-awareness is developed through daily reflections on wins, struggles, and lessons. This sustains long-term motivation.
+Finally, progress analytics influence both engagement and knowledge application. As users are presented with visual feedback loops, the system encourages continuous use and deeper reflection, closing the loop between learning, action, and outcome. This makes personal development measurable and motivating.
+ 
+
+Figure 1: Concept Map
+ 
+
+CHAPTER THREE
+Methodology
+3.1.	  Introduction
+This chapter describes the methods and procedures that were used in the development and evaluation of the Live Your Books web-based self-improvement application. It touches on the research design, system development methodology, target population, data collection procedures, development tools, and techniques used in evaluating the system's performance. The methodology ensures that the system was designed to meet its intended objectives while following a structured software development process.
+3.2.	 Research methodology/Research design used
+The research adopted a qualitative design within the framework of Design Science Research Methodology (DSRM). This methodology is appropriate for software-based projects where the primary goal is to develop and evaluate an artifact to solve a practical problem. In this case, Live Your Books is designed to help users implement lessons from personal development books through AI mentorship, journaling, and progress tracking. The process involved identifying the problem, defining objectives for a solution, designing and developing the artifact, and finally demonstrating and evaluating the system.
+3.2.1.	Development Methodology (for software projects)
+Development Approach
+The system was developed using the Rapid Application Development methodology (RAD). The adoption of RAD is driven by its inherent ability to deliver a high-quality, user-centric solution efficiently and responsively. The methodology's agile nature fosters the better adoption of new technologies, thereby consistently leveraging the latest advancements in AI and user experience design, which provides users with cutting-edge tools to achieve their personal growth goals.
+Iterative Processes
+The development of Live Your Books will follow an iterative cycle embedded within the RAD framework.
+Requirement Planning: This phase established the foundational understanding for the initial iteration, involving the identification of the core problem of passive knowledge consumption and the definition of objectives for the AI mentorship, journaling, and progress tracking features.
+User Design: This is the core of the iterative process.  Short, time-boxed cycles will focus on developing specific modules. Each cycle will involve: design, build a prototype, demonstrate and gather feedback, and finally refine and adjust.
+Construction: As prototypes are validated, the development transitions into the Construction phase, where full functionalities are built out in increments. This phase, consistent with the iterative nature of Rapid Application Development (RAD), also operates cyclically. It involves the diligent coding and implementation of each module, leveraging a robust technology stack including Laravel for backend logic, Inertia.js for seamless integration, and React for the dynamic frontend, all while integrating the OpenAI API for crucial AI interactions. Following implementation, unit and integration testing are rigorously performed for each developed component, ensuring both its individual functionality and its seamless compatibility with other modules. This continuous process is further supported by continuous integration of new code, which is regularly merged into the main codebase, thereby maintaining a stable and reliable application throughout the development lifecycle.
+Cutover: The final iteration focuses on preparing the complete Live Your Books system for release and ongoing improvement.
+3.3.	 Business Understanding
+The core objective of the Live Your Books system is to address the pervasive challenge faced by modern readers: the increasing difficulty in translating the wisdom and principles acquired from personal development books into tangible, real-life application. This crucial gap frequently leads to passive knowledge consumption, where valuable insights remain theoretical, resulting in preventable stagnation in personal growth and a missed opportunity for meaningful self-transformation. Live Your Books seeks to offer a proactive, integrated, and data-driven approach to personal growth monitoring by utilizing personalized AI mentorship, structured journaling, and real-time progress tracking.
+During this foundational stage, we established the system's main goals and success criteria. The primary objectives are to provide users with immediate, actionable insights and personalized guidance, foster consistent reflection and accountability using AI, and enable real-time tracking of personal growth through integrated tools. The functional and non-functional requirements of the system were shaped by a comprehensive assessment of stakeholder needs, ranging from individual readers committed to self-improvement to the broader ecosystem of personal development content creators. This ensures Live Your Books is designed to truly empower users in their journey from learning to living.
+3.3.1.	Feasibility Study
+Technical Feasibility: Assessed whether the technology needed for the project is available and practical. The chosen stack (Laravel, React, MySQL, OpenAI API, Inertia) confirmed technical viability. Limitations regarding premium APIs and full-scale cloud infrastructure due to budget were acknowledged.
+Economic Feasibility: Evaluated the cost-effectiveness of the project, considering development effort, potential resource acquisition, and value proposition, Live Your Books.
+Operational Feasibility: Determined if the proposed system would operate effectively within the user's digital ecosystem, focusing on a web-based, user-friendly, and responsive platform that integrates seamlessly into existing personal development routines.
+
+
+3.3.2.	Requirements Gathering
+These methods shall be used to access and gather information from the participants that will be helpful during the development of the system. The following processes shall be used: 
+Document Analysis: Review of literature, existing journaling apps, AI mentorship platforms, and academic research to understand user needs, common challenges in knowledge application, and successful features in related systems.
+Observation: Observe existing systems to identify pain points and areas for improvement in knowledge application, informing Live Your Books design to support actional learning and personalized mentorship.
+Stakeholder Needs (Implicit): The analysis infers needs from the identified problem – users require personalized, AI–guided mentorship, integrated journaling, and goal tracking tied to their reading.
+3.3.3.	Functional Requirements
+The functional requirements for the system precisely define its intended capabilities and core functionalities. These include the ability to allow users to input and manage their personal library of books, serving as the foundation for their learning journey. The system must also enable personalized interactions with AI mentors, providing tailored guidance and responses based on user queries and selected content. A key feature is the capacity to automatically suggest actionable steps derived directly from the books, transforming theoretical knowledge into practical tasks. Furthermore, the system is required to allow for habit creation and tracking, fostering consistency in applying learned principles. Users must be able to provide journal entries for reflection and self-documentation, and the system needs to display comprehensive progress summaries, streaks, and book-based analysis to visualize their growth. The functionality to generate detailed personal reports is essential for users to review their long-term development. Finally, the system must securely manage user registration, authentication, and profiles, ensuring a personalized and protected environment for each user.
+3.3.4.	Non-Functional Requirements
+The non-functional requirements, on the other hand, delineate the quality attributes and operational characteristics of the system. These include paramount security, necessitating the implementation of robust measures to protect sensitive personal data and uphold user trust, specifically through secure storage with encryption and the application of timestamps for all journal entries. Performance is another critical aspect, demanding a responsive user experience across all interactions and functionalities. Usability is central to the design, requiring a user-friendly platform characterized by consistency in interface, responsiveness to user input, and the provision of meaningful feedback. Furthermore, scalability is a key consideration, ensuring the system's capacity to handle a growing number of users and an expanding volume of data without degradation in performance. Lastly, maintainability is crucial, dictating that the system be designed for ease of future updates, modifications, and enhancements, thereby ensuring its long-term viability and adaptability.
+3.4.	Design
+The system design section focuses on detailing how Live Your Books will be structured and implemented based on the defined requirements.
+System Modelling
+Context Diagram
+
+	Use Case Diagram
+
+Level 1 DFD
+ 
+Figure 4: Level 1 DFD
+
+Activity Diagram
+
+
+Class Diagram
+
+
+3.5.	 Coding
+The technological foundation for the system was meticulously chosen, comprising a specific set of programming languages, frameworks, and tools. For backend development, PHP (version 8.x) was selected as the core programming language, complemented by the robust Laravel (version 10.x) framework. Data persistence is handled by MySQL (version 8.x), while crucial AI functionalities are integrated via the OpenAI API. To ensure seamless communication between the frontend and backend, Inertia.js was chosen as the middleware. On the frontend, the interactive user interface is built using the React.js (version 18.x) library, styled efficiently with the Tailwind CSS framework. Node.js serves as the JavaScript runtime environment, facilitating frontend development processes. For collaborative development and version tracking, Git is employed as the version control system. Finally, Composer and npm were selected as the primary package managers for managing PHP and JavaScript dependencies, respectively. This comprehensive selection of tools was strategically driven by their collective alignment with the project's specific requirements, anticipated scalability needs, and the overarching goal of maximizing development efficiency.
+3.6.	Testing
+Unit Testing
+To ensure Live Your Books effectively addresses the needs of its users, a detailed testing strategy shall be implemented. Unit testing starts where individual code elements are thoroughly assessed in isolation. Developers generate automated tests for each function to ensure it executes its designated task perfectly, identifying bugs at the earliest possible stage.
+Integration Testing
+Integration testing assesses the fluid communication and data exchange between various modules (e.g., book tracking, journaling) and external services (e.g., OpenAI API). This shall involve confirming when a user requests AI-guided advice, the request is correctly processed by the AI module, and personalized insights are returned, or that notifications for habit tracking are dispatched. It shall also ensure that functionalities like processing user data for progress tracking and optimizing AI response generation through API interactions work together seamlessly, simulating real-life scenarios within the personal growth guidance system.
+System Testing
+Lastly, system testing shall review the complete application as an entire, unified product. This phase mimics full user interactions, from user registration and book entry to monitoring progress and AI-guided learning, to verifying that all the functional requirements are satisfied. Evaluation of performance under different user loads will also be included, ensuring the protection of sensitive data, and carrying out usability assessments with target users to confirm the system is prepared for effective and dependable deployment.
+3.7.	 Deployment
+The Live Your Books solution will be deployed as an accessible web application. Its frontend, built with modern frameworks like React, will ensure an intuitive user experience for features such as the personalized dashboard and interactive content displays. The backend will rely on robust technologies such as PHP (Laravel) and a MySQL database, all hosted on a scalable cloud infrastructure. Essential APIs for AI-driven insights (OpenAI) and notification services will be integrated to facilitate seamless personal growth guidance.
+3.8.	Research Ethics
+Throughout the development and evaluation of "Live Your Books," stringent ethical considerations will be observed to ensure participants' rights and privacy are consistently protected. This commitment begins with informed consent, ensuring all individuals are fully aware of the research's purpose and their role before participation. Confidentiality will be strictly maintained for all personal data, while anonymity will be ensured where feasible to protect participant identities. Robust data security measures will be implemented to safeguard sensitive information. Participation will always be voluntary, with individuals having the freedom to withdraw at any time. Furthermore, transparency and disclosure will guide all interactions, providing clear information about the system's capabilities and limitations. Finally, clear policies on data use and storage will be communicated and adhered to. These ethical guidelines are integral to maintaining the integrity and credibility of the research, fostering trustworthy and respectful interactions with all involved individuals, and upholding the highest standards of academic conduct. 
+APPENDICES
+REFERENCES
+Locke, E.A., & Latham, G.P. (2002). Building a practically useful theory of goal setting and task motivation: A 35-year odyssey. American Psychologist, 57(9), 705-717.
+https://doi.org/10.1037/0003-066X.57.9.705
+Nielsen, J., & Mack, R.L. (Eds.). (1994). Usability inspection methods. John Wiley & Sons.
+https://books.google.com/books/about/Usability_Inspection_Methods.html?id=cuRQAAAAMAAJ
+Pennebaker, J.W. (1997). Writing about emotional experiences is a therapeutic process. Psychological Science, 8(3), 162-166.
+https://doi.org/10.1111/j.1467-9280.1997.tb00403.x
+Ruan, Y., Fu, Y., & Zhang, Z. (2021). Intelligent Mentoring: Exploring AI's role in personalized goal setting and behavioral coaching. International Journal of Artificial Intelligence in Education, 31(2), 231-249.
+https://doi.org/10.1007/s40593-020-00209-w
+ 
+PROJECT SCHEDULE
+Monthly Activity	May 2025	June 2025	July 2025	August
+2025	September
+2025	October
+2025
+Topic Identification						
+Problem Statement Definition						
+Literature Review						
+Research Design						
+Proposal Presentation						
+Data Collection						
+System implementation and testing						
+Final Project Presentation						
+ 
+PROJECT BUDGET
+Item	Description	Estimated Cost (Ksh)
+Software Development	Laravel framework, React library, MySQL setup	0
+OpenAI API Access	GPT-4-based AI queries (based on student/free tier usage)	0 – 3,000 (depending on usage)
+Hosting & Domain	Server hosting (VPS) + domain registration	3500
+Development Tools	VS Code (free), Git (private repo)	0
+Testing Tools	Unit tests (PHPUnit, Jest), manual testing	0
+Security & Compliance	SSL certificate, data encryption setup	0
+Maintenance & Support	Regular updates, bug fixes	3500
+Miscellaneous	Internet, electricity, contingency	2000
+Total Estimated Budget		Ksh 11000
+
