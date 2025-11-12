@@ -83,6 +83,8 @@ Route::middleware(['auth'])->group(function () {
 Route::middleware(['auth', 'verified'])->group(function () {
     // Resource routes
     Route::resource('books', BookController::class);
+    // Allow POST for book updates when files are present (method spoofing)
+    Route::post('/books/{book}', [BookController::class, 'update'])->name('books.update.post');
     Route::resource('journals', JournalController::class);
     Route::resource('tasks', TaskController::class);
     Route::resource('habits', HabitController::class);

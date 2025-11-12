@@ -506,69 +506,84 @@ class AIFeaturesController extends Controller
                 }
             }
             
-            // Build prompt for habit suggestions
-            $prompt = "Generate 5-7 specific, actionable habit suggestions for personal growth and development.\n\n";
+            // Build prompt for habit suggestions - prioritize book and goals
+            $prompt = "";
             
-            if ($thinkerName) {
-                $prompt .= "**Thinker Style:** {$thinkerName}\n";
-                $prompt .= "Provide habits that align with this thinker's philosophy and approach.\n\n";
-            }
-            
+            // PRIMARY FOCUS: Book context (if provided)
             if ($book) {
-                $prompt .= "**Book Context:**\n";
+                $prompt .= "**PRIMARY FOCUS - BOOK (Generate habits DIRECTLY inspired by this book):**\n";
                 $prompt .= "Title: {$book->title}\n";
                 if ($book->author) {
                     $prompt .= "Author: {$book->author}\n";
                 }
-                $prompt .= "Suggest habits inspired by insights from this book.\n\n";
+                if ($book->genre) {
+                    $prompt .= "Genre: {$book->genre}\n";
+                }
+                $prompt .= "\n";
+                $prompt .= "CRITICAL: All habit suggestions MUST be directly inspired by the concepts, principles, practices, or insights from this specific book. Base habits on what the book teaches, not generic advice.\n\n";
             }
             
-            if ($request->life_area) {
-                $prompt .= "**Life Area Focus:** {$request->life_area}\n\n";
-            }
-            
+            // PRIMARY FOCUS: User goals (if provided)
             if (!empty($request->goals)) {
-                $prompt .= "**User Goals:**\n";
+                $prompt .= "**PRIMARY FOCUS - USER GOALS (Generate habits that directly support these goals):**\n";
                 foreach ($request->goals as $goal) {
                     $prompt .= "- {$goal}\n";
                 }
                 $prompt .= "\n";
+                $prompt .= "CRITICAL: All habit suggestions MUST directly support and help achieve these specific goals.\n\n";
             }
             
-            // Add current habits context
+            // Life area focus
+            if ($request->life_area) {
+                $prompt .= "**Life Area Focus:** {$request->life_area}\n";
+                $prompt .= "Focus habit suggestions in this area.\n\n";
+            }
+            
+            // Thinker style (for context, not primary focus)
+            if ($thinkerName) {
+                $prompt .= "**Thinker Style (for context):** {$thinkerName}\n";
+                $prompt .= "If applicable, align habits with this thinker's philosophy, but prioritize the book/goals above.\n\n";
+            }
+            
+            // Current habits (for context - to avoid duplicates)
             if ($habits->count() > 0) {
-                $prompt .= "**Current Active Habits:**\n";
+                $prompt .= "**User's Current Habits (for reference - avoid suggesting duplicates):**\n";
                 foreach ($habits->take(5) as $habit) {
                     $prompt .= "- {$habit->name} ({$habit->frequency})\n";
                 }
                 $prompt .= "\n";
             }
             
-            // Add current tasks context
+            // Current tasks (for context only)
             if ($tasks->count() > 0) {
-                $prompt .= "**Current Tasks:**\n";
-                foreach ($tasks->take(5) as $task) {
+                $prompt .= "**User's Current Tasks (for context only):**\n";
+                foreach ($tasks->take(3) as $task) {
                     $prompt .= "- {$task->title}\n";
                 }
                 $prompt .= "\n";
             }
             
-            $prompt .= "**Instructions:**\n";
-            $prompt .= "Provide 5-7 habit suggestions that:\n";
-            $prompt .= "1. Are specific and actionable\n";
-            $prompt .= "2. Can be tracked daily or weekly\n";
-            $prompt .= "3. Align with the user's goals and context\n";
-            $prompt .= "4. Are realistic and achievable\n";
-            $prompt .= "5. Include a suggested frequency (daily, weekly)\n\n";
+            $prompt .= "**CRITICAL INSTRUCTIONS:**\n";
+            $prompt .= "Generate 5-7 habit suggestions that:\n";
+            $prompt .= "1. **PRIMARY: Are DIRECTLY inspired by the book's content, principles, or practices (if book is provided)**\n";
+            $prompt .= "2. **PRIMARY: Directly support the user's specific goals (if goals are provided)**\n";
+            $prompt .= "3. Are specific, actionable, and clearly related to the book/goals\n";
+            $prompt .= "4. Can be tracked daily or weekly\n";
+            $prompt .= "5. Are realistic and achievable\n";
+            $prompt .= "6. Include a suggested frequency (daily, weekly)\n";
+            $prompt .= "7. Avoid duplicating existing habits listed above\n\n";
+            $prompt .= "If a book is provided, the habits MUST be based on what the book teaches. For example:\n";
+            $prompt .= "- If the book is about running, suggest running-related habits\n";
+            $prompt .= "- If the book is about stoicism, suggest stoic practice habits\n";
+            $prompt .= "- If the book is about productivity, suggest productivity habits from the book\n";
+            $prompt .= "DO NOT suggest generic habits unrelated to the book's content.\n\n";
             $prompt .= "Format each habit as:\n";
-            $prompt .= "- Habit Name (Frequency)\n";
-            $prompt .= "  Brief description or reason\n\n";
+            $prompt .= "Habit Name (Frequency): Description explaining how it relates to the book/goals\n\n";
             $prompt .= "Return ONLY the list of habits, one per line, with format:\n";
             $prompt .= "Habit Name (Frequency): Description\n\n";
-            $prompt .= "Example:\n";
-            $prompt .= "Morning Meditation (Daily): Start each day with 10 minutes of mindfulness practice to center yourself and set intentions.\n";
-            $prompt .= "Gratitude Journaling (Daily): Write down three things you're grateful for each evening to cultivate positive mindset.\n";
-            $prompt .= "Weekly Review (Weekly): Reflect on your week's progress, challenges, and lessons learned every Sunday.\n";
+            $prompt .= "Example for a running book:\n";
+            $prompt .= "Daily Morning Run (Daily): Start each day with a 20-minute run to build endurance and mental resilience as taught in the book.\n";
+            $prompt .= "Weekly Long Distance Run (Weekly): Complete one longer run each week to push your limits and build the mental toughness discussed in the book.\n";
             
             // Generate suggestions using AI
             $response = $this->geminiService->generateBookResponse($prompt, $book?->id, null, $user);

@@ -94,15 +94,26 @@ class AdviceCustomizerService
      */
     protected function buildAdvicePrompt(User $user, ?Thinker $thinker, ?string $thinkerName, ?Book $book, array $goals, $habits, $incompleteTasks, $recentJournals): string
     {
-        // Start with user's request for advice
-        $prompt = "Provide personalized advice for personal growth and development based on the following context:\n\n";
+        // Start with the user's primary question/goal - this is the MOST IMPORTANT part
+        $prompt = "";
+        
+        if (!empty($goals)) {
+            $prompt .= "**USER'S QUESTION/GOAL (PRIMARY FOCUS - ANSWER THIS DIRECTLY):**\n";
+            foreach ($goals as $goal) {
+                $prompt .= "- {$goal}\n";
+            }
+            $prompt .= "\n";
+            $prompt .= "IMPORTANT: Your response must DIRECTLY answer the user's question above. This is the primary purpose of your advice. Use the context below only to personalize your answer, not to change the topic.\n\n";
+        } else {
+            $prompt = "Provide personalized advice for personal growth and development.\n\n";
+        }
 
         // Note: Mentor/thinker context is handled by the system prompt in generateBookResponse
         // Book context is also handled there, so we focus on user-specific context here
 
         // Add book context if no mentor is selected (for book-based advice)
         if ($book && !$thinker && !$thinkerName) {
-            $prompt .= "**Book Context:**\n";
+            $prompt .= "**Book Context (use to inform your answer):**\n";
             $prompt .= "Title: {$book->title}\n";
             if ($book->author) {
                 $prompt .= "Author: {$book->author}\n";
@@ -113,18 +124,9 @@ class AdviceCustomizerService
             $prompt .= "\n";
         }
 
-        // Add user goals
-        if (!empty($goals)) {
-            $prompt .= "**User Goals:**\n";
-            foreach ($goals as $goal) {
-                $prompt .= "- {$goal}\n";
-            }
-            $prompt .= "\n";
-        }
-
-        // Add current habits with more context
+        // Add current habits with more context (for personalization only)
         if ($habits->count() > 0) {
-            $prompt .= "**Current Active Habits:**\n";
+            $prompt .= "**User's Current Habits (for context - use to personalize, not to change topic):**\n";
             foreach ($habits as $habit) {
                 $streak = $habit->streak ?? 0;
                 $lastCompleted = 'Never';
@@ -145,14 +147,12 @@ class AdviceCustomizerService
                 $prompt .= "- {$habit->name} ({$habit->frequency}): Current streak: {$streak} days, Last completed: {$lastCompleted}\n";
             }
             $prompt .= "\n";
-        } else {
-            $prompt .= "**Current Active Habits:** None\n\n";
         }
 
-        // Add incomplete tasks with more context
+        // Add incomplete tasks with more context (for personalization only)
         if ($incompleteTasks->count() > 0) {
-            $prompt .= "**Current Incomplete Tasks:**\n";
-            foreach ($incompleteTasks->take(10) as $task) {
+            $prompt .= "**User's Current Tasks (for context - use to personalize, not to change topic):**\n";
+            foreach ($incompleteTasks->take(5) as $task) {
                 $dueDate = "No due date";
                 if ($task->due_date) {
                     try {
@@ -175,37 +175,34 @@ class AdviceCustomizerService
                 $prompt .= "\n";
             }
             $prompt .= "\n";
-        } else {
-            $prompt .= "**Current Incomplete Tasks:** None\n\n";
         }
 
-        // Add recent journal themes
+        // Add recent journal themes (for personalization only)
         if ($recentJournals->count() > 0) {
-            $prompt .= "**Recent Journal Themes:**\n";
-            foreach ($recentJournals as $journal) {
+            $prompt .= "**Recent Journal Themes (for context - use to personalize, not to change topic):**\n";
+            foreach ($recentJournals->take(3) as $journal) {
                 $tags = $journal->tags ? implode(', ', $journal->tags) : 'No tags';
                 $prompt .= "- {$journal->title} (Tags: {$tags})\n";
             }
             $prompt .= "\n";
         }
 
-        $prompt .= "**Instructions:**\n";
+        $prompt .= "**CRITICAL INSTRUCTIONS:**\n";
         if ($thinker || $thinkerName) {
-            $prompt .= "Respond as the selected mentor/thinker would, providing personalized advice that:\n";
+            $prompt .= "Respond as the selected mentor/thinker would. Your response MUST:\n";
         } else {
-            $prompt .= "Provide practical, actionable advice that:\n";
+            $prompt .= "Your response MUST:\n";
         }
-        $prompt .= "1. Addresses the user's specific goals and current situation\n";
-        $prompt .= "2. Is personalized based on their habits, tasks, and journal entries\n";
-        $prompt .= "3. Offers concrete steps they can take immediately\n";
-        $prompt .= "4. Is encouraging and motivating\n";
+        $prompt .= "1. **PRIMARY: Directly answer the user's question/goal stated above. This is the main focus.**\n";
+        $prompt .= "2. Provide a clear, comprehensive answer to their specific question\n";
+        $prompt .= "3. Use the context (habits, tasks, journals) ONLY to personalize your answer and make it relevant to their current situation - DO NOT use it to change the topic\n";
+        $prompt .= "4. Offer concrete, actionable steps they can take to achieve their goal\n";
+        $prompt .= "5. Be encouraging and motivating\n";
         if ($thinker || $thinkerName) {
-            $prompt .= "5. Reflects your expertise, perspective, and communication style\n";
-        } else {
-            $prompt .= "5. Is practical and achievable\n";
+            $prompt .= "6. Reflect your expertise, perspective, and communication style as the selected mentor\n";
         }
-        $prompt .= "6. Is practical and achievable\n\n";
-        $prompt .= "Keep the response focused, actionable, and inspiring. Aim for 150-200 words.";
+        $prompt .= "\n";
+        $prompt .= "Remember: The user's question/goal is the PRIMARY focus. The context is only for personalization. Keep the response focused on answering their question directly. Aim for 200-300 words to provide a thorough answer.";
 
         return $prompt;
     }

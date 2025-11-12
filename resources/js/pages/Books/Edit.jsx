@@ -19,7 +19,7 @@ const Edit = ({ book, genres = [], lifeAreas = [] }) => {
     // Ensure title is never empty - use cleaned title or fallback to original book title
     const initialTitle = cleanTitle || book?.title || '';
     
-    const { data, setData, put, processing, errors } = useForm({
+    const { data, setData, put, post, processing, errors } = useForm({
         title: initialTitle,
         author: cleanAuthor || '',
         genre: book?.genre ?? '',
@@ -38,13 +38,25 @@ const Edit = ({ book, genres = [], lifeAreas = [] }) => {
             setData('title', finalTitle);
         }
         
-        // Submit the form - put will use the form's data state
-        put(`/books/${book.id}`, {
-            preserveScroll: true,
-            onError: (errors) => {
-                console.log('Update errors:', errors);
-            },
-        });
+        // If there's a file, use POST route (browsers can't send PUT with FormData)
+        // Otherwise, use PUT method
+        if (data.cover_img) {
+            post(`/books/${book.id}`, {
+                preserveScroll: true,
+                forceFormData: true,
+                onError: (errors) => {
+                    console.log('Update errors:', errors);
+                },
+            });
+        } else {
+            // Submit the form - put will use the form's data state
+            put(`/books/${book.id}`, {
+                preserveScroll: true,
+                onError: (errors) => {
+                    console.log('Update errors:', errors);
+                },
+            });
+        }
     };
 
     const handleFileChange = (e) => {
