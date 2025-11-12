@@ -128,25 +128,30 @@ class AIFeaturesController extends Controller
      */
     public function generateAdvice(Request $request)
     {
-        // Normalize empty strings to null
-        $thinkerId = $request->thinker_id && $request->thinker_id !== '' ? $request->thinker_id : null;
-        $bookId = $request->book_id && $request->book_id !== '' ? $request->book_id : null;
-        $lifeArea = $request->life_area && $request->life_area !== '' ? $request->life_area : null;
-        
-        $request->validate([
+        $validated = $request->validate([
             'thinker_id' => 'nullable|string', // Can be numeric ID, thinker_xxx, or author_xxx
-            'book_id' => $bookId ? 'nullable|exists:books,id' : 'nullable',
+            'custom_thinker_name' => 'nullable|string|max:255',
+            'book_id' => 'nullable|exists:books,id',
+            'custom_book_title' => 'nullable|string|max:255',
+            'life_area' => 'nullable|string|in:health,career,relationships,personal_growth,learning',
+            'custom_life_area' => 'nullable|string|max:255',
             'goals' => 'nullable|array',
             'goals.*' => 'string|max:255',
-            'life_area' => 'nullable|string|in:health,career,relationships,personal_growth,learning',
         ]);
 
         $user = auth()->user();
+        $thinkerId = !empty($validated['thinker_id']) ? $validated['thinker_id'] : null;
+        $customThinkerName = !empty($validated['custom_thinker_name']) ? trim($validated['custom_thinker_name']) : null;
+        $bookId = !empty($validated['book_id']) ? $validated['book_id'] : null;
+        $customBookTitle = !empty($validated['custom_book_title']) ? trim($validated['custom_book_title']) : null;
+        $lifeArea = !empty($validated['life_area']) ? $validated['life_area'] : null;
+        $customLifeArea = !empty($validated['custom_life_area']) ? trim($validated['custom_life_area']) : null;
+        $goals = $validated['goals'] ?? [];
         
         try {
             // Handle different types of thinker IDs
             $thinker = null;
-            $thinkerName = null;
+            $thinkerName = $customThinkerName;
             if ($thinkerId) {
                 if (str_starts_with($thinkerId, 'thinker_')) {
                     // Predefined thinker
@@ -182,7 +187,14 @@ class AIFeaturesController extends Controller
             if ($bookId) {
                 $book = Book::where('user_id', $user->id)->find($bookId);
             }
-            $goals = $request->goals ?? [];
+            if (!$book && $customBookTitle) {
+                $book = Book::make([
+                    'title' => $customBookTitle,
+                ]);
+            }
+            if ($customLifeArea) {
+                $goals[] = "Focus on {$customLifeArea}";
+            }
 
             // If life area is specified, use it to generate goals
             if ($lifeArea) {
@@ -470,12 +482,17 @@ class AIFeaturesController extends Controller
     {
         $request->validate([
             'book_id' => 'nullable|exists:books,id',
+            'custom_book_title' => 'nullable|string|max:255',
             'thinker_id' => 'nullable|string',
-            'life_area' => 'nullable|string',
+            'custom_thinker_name' => 'nullable|string|max:255',
+            'life_area' => 'nullable|string|in:health,career,relationships,personal_growth,learning',
+            'custom_life_area' => 'nullable|string|max:255',
             'goals' => 'nullable|array',
+            'goals.*' => 'string|max:255',
         ]);
 
         $user = auth()->user();
+        $goals = $request->goals ?? [];
         
         try {
             // Get user context
@@ -487,6 +504,12 @@ class AIFeaturesController extends Controller
             $book = null;
             if ($request->book_id) {
                 $book = Book::where('user_id', $user->id)->find($request->book_id);
+            }
+            $customBookTitle = $request->filled('custom_book_title') ? trim($request->custom_book_title) : null;
+            if (!$book && $customBookTitle) {
+                $book = Book::make([
+                    'title' => $customBookTitle,
+                ]);
             }
             
             // Get thinker context if provided
@@ -505,6 +528,24 @@ class AIFeaturesController extends Controller
                     }
                 }
             }
+            $customThinkerName = $request->filled('custom_thinker_name') ? trim($request->custom_thinker_name) : null;
+            if (!$thinkerName && $customThinkerName) {
+                $thinkerName = $customThinkerName;
+            }
+
+            $lifeArea = $request->life_area && $request->life_area !== '' ? $request->life_area : null;
+            $customLifeArea = $request->filled('custom_life_area') ? trim($request->custom_life_area) : null;
+            if ($customLifeArea) {
+                $goals[] = "Focus on {$customLifeArea}";
+            }
+            $lifeAreaLabels = [
+                'health' => 'Health & Wellness',
+                'career' => 'Career & Professional',
+                'relationships' => 'Relationships',
+                'personal_growth' => 'Personal Growth',
+                'learning' => 'Learning & Development',
+            ];
+            $lifeAreaFocus = $customLifeArea ?: ($lifeArea ? ($lifeAreaLabels[$lifeArea] ?? $lifeArea) : null);
             
             // Build prompt for habit suggestions - prioritize book and goals
             $prompt = "";
@@ -524,9 +565,9 @@ class AIFeaturesController extends Controller
             }
             
             // PRIMARY FOCUS: User goals (if provided)
-            if (!empty($request->goals)) {
+            if (!empty($goals)) {
                 $prompt .= "**PRIMARY FOCUS - USER GOALS (Generate habits that directly support these goals):**\n";
-                foreach ($request->goals as $goal) {
+                foreach ($goals as $goal) {
                     $prompt .= "- {$goal}\n";
                 }
                 $prompt .= "\n";
@@ -534,8 +575,8 @@ class AIFeaturesController extends Controller
             }
             
             // Life area focus
-            if ($request->life_area) {
-                $prompt .= "**Life Area Focus:** {$request->life_area}\n";
+            if ($lifeAreaFocus) {
+                $prompt .= "**Life Area Focus:** {$lifeAreaFocus}\n";
                 $prompt .= "Focus habit suggestions in this area.\n\n";
             }
             

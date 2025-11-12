@@ -1,5 +1,10 @@
 <?php
 
+use App\Http\Controllers\Admin\AdminBookCatalogController;
+use App\Http\Controllers\Admin\AdminDashboardController;
+use App\Http\Controllers\Admin\AdminIntegrationController;
+use App\Http\Controllers\Admin\AdminBookController;
+use App\Http\Controllers\Admin\AdminUserController;
 use App\Http\Controllers\BookController;
 use App\Http\Controllers\AIChatController;
 use App\Http\Controllers\MentorController;
@@ -11,6 +16,7 @@ use App\Http\Controllers\HabitController;
 use App\Http\Controllers\ThinkerController;
 use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\AIFeaturesController;
+use App\Enums\UserRole;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 
@@ -20,10 +26,15 @@ Route::get('/', function () {
 
 // Public dashboard route - redirects to auth dashboard if logged in
 Route::get('/dashboard', function () {
-    if (auth()->check()) {
-        return app(\App\Http\Controllers\DashboardController::class)->index();
+    if (! auth()->check()) {
+        return redirect()->route('login');
     }
-    return redirect()->route('login');
+
+    if (auth()->user()?->role === UserRole::Admin->value) {
+        return redirect()->route('admin.dashboard');
+    }
+
+    return app(\App\Http\Controllers\DashboardController::class)->index();
 })->name('dashboard');
 
 // Public routes will be handled in auth middleware group below
@@ -81,6 +92,29 @@ Route::middleware(['auth'])->group(function () {
 });
 
 Route::middleware(['auth', 'verified'])->group(function () {
+    Route::prefix('admin')
+        ->name('admin.')
+        ->middleware('role:admin')
+        ->group(function () {
+            Route::get('/', [AdminDashboardController::class, 'index'])->name('dashboard');
+
+            Route::get('/users', [AdminUserController::class, 'index'])->name('users.index');
+            Route::post('/users', [AdminUserController::class, 'store'])->name('users.store');
+            Route::put('/users/{user}', [AdminUserController::class, 'update'])->name('users.update');
+            Route::delete('/users/{user}', [AdminUserController::class, 'destroy'])->name('users.destroy');
+
+            Route::resource('books', AdminBookController::class);
+            Route::get('/books', [AdminBookController::class, 'index'])->name('books.index');
+            Route::post('/books', [AdminBookController::class, 'store'])->name('books.store');
+            Route::put('/books/{book}', [AdminBookController::class, 'update'])->name('books.update');
+            Route::delete('/books/{book}', [AdminBookController::class, 'destroy'])->name('books.destroy');
+
+            Route::get('/integrations', [AdminIntegrationController::class, 'index'])->name('integrations.index');
+            Route::post('/integrations', [AdminIntegrationController::class, 'store'])->name('integrations.store');
+            Route::put('/integrations/{integrationSetting}', [AdminIntegrationController::class, 'update'])->name('integrations.update');
+            Route::delete('/integrations/{integrationSetting}', [AdminIntegrationController::class, 'destroy'])->name('integrations.destroy');
+        });
+
     // Resource routes
     Route::resource('books', BookController::class);
     // Allow POST for book updates when files are present (method spoofing)
@@ -163,6 +197,22 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::post('/ai/save-routine-template', [AIFeaturesController::class, 'saveRoutineTemplate'])->name('ai.save-routine-template');
     Route::post('/ai/generate-habit-suggestions', [AIFeaturesController::class, 'generateHabitSuggestions'])->name('ai.generate-habit-suggestions');
     Route::post('/ai/create-habit', [AIFeaturesController::class, 'createHabitFromSuggestion'])->name('ai.create-habit');
+});
+
+Route::middleware(['auth', 'verified', 'role'])->prefix('admin')->name('admin.')->group(function () {
+    Route::get('/', [AdminDashboardController::class, 'index'])->name('dashboard');
+
+    Route::get('/users', [AdminUserController::class, 'index'])->name('users.index');
+    Route::put('/users/{user}', [AdminUserController::class, 'update'])->name('users.update');
+    Route::post('/users/{user}/toggle', [AdminUserController::class, 'toggle'])->name('users.toggle');
+
+    Route::get('/catalog', [AdminBookCatalogController::class, 'index'])->name('catalog.index');
+    Route::post('/catalog', [AdminBookCatalogController::class, 'store'])->name('catalog.store');
+    Route::put('/catalog/{entry}', [AdminBookCatalogController::class, 'update'])->name('catalog.update');
+    Route::delete('/catalog/{entry}', [AdminBookCatalogController::class, 'destroy'])->name('catalog.destroy');
+
+    Route::get('/integrations', [AdminIntegrationController::class, 'index'])->name('integrations.index');
+    Route::put('/integrations/{integration}', [AdminIntegrationController::class, 'update'])->name('integrations.update');
 });
 
 

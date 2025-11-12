@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Bell, Settings, Sun, Moon, ChevronLeft, ChevronRight, Home, Book, Brain, BookOpenCheck, PersonStanding, Notebook, ChartSpline, User, Sparkles } from "lucide-react";
+import { Bell, Settings, Sun, Moon, ChevronLeft, ChevronRight, Home, Book, Brain, BookOpenCheck, PersonStanding, Notebook, ChartSpline, User, Sparkles, Shield, Users, LibraryBig, Plug2 } from "lucide-react";
 import { Link, usePage, router } from "@inertiajs/react";
 import NotificationDropdown from "../components/NotificationDropdown";
 
@@ -24,17 +24,25 @@ export default function AppLayout({ children }) {
 
   const { url, props } = usePage(); // current route and props from Inertia
 
-  const navItems = [
-    { name: "Dashboard", href: '/dashboard', icon: <Home className="mr-3" /> },
-    { name: "Books", href: '/books', icon: <Book className="mr-3" /> },
-    { name: "AI Mentor", href: '/mentor/chat', icon: <Brain className="mr-3" /> },
-    { name: "AI Features", href: '/ai/features', icon: <Sparkles className="mr-3" /> },
-    { name: "Task Generator", href: '/tasks', icon: <BookOpenCheck className="mr-3" /> },
-    { name: "Habit Tracker", href: '/habits', icon: <PersonStanding className="mr-3" /> },
-    { name: "Journal", href: '/journals', icon: <Notebook className="mr-3" /> },
-    { name: "Analytics", href: '/analytics', icon: <ChartSpline className="mr-3" /> },
-    { name: "Profile", href: '/profile', icon: <User className="mr-3" /> },
-  ];
+  const isAdmin = props?.auth?.user?.role === 'admin';
+
+  const navItems = isAdmin
+    ? [
+        { name: "Admin Overview", href: '/admin', icon: <Shield className="mr-3" /> },
+        { name: "Manage Users", href: '/admin/users', icon: <Users className="mr-3" /> },
+        { name: "Books", href: '/admin/books', icon: <LibraryBig className="mr-3" /> },
+      ]
+    : [
+        { name: "Dashboard", href: '/dashboard', icon: <Home className="mr-3" /> },
+        { name: "Books", href: '/books', icon: <Book className="mr-3" /> },
+        { name: "AI Mentor", href: '/mentor/chat', icon: <Brain className="mr-3" /> },
+        { name: "AI Features", href: '/ai/features', icon: <Sparkles className="mr-3" /> },
+        { name: "Task Generator", href: '/tasks', icon: <BookOpenCheck className="mr-3" /> },
+        { name: "Habit Tracker", href: '/habits', icon: <PersonStanding className="mr-3" /> },
+        { name: "Journal", href: '/journals', icon: <Notebook className="mr-3" /> },
+        { name: "Analytics", href: '/analytics', icon: <ChartSpline className="mr-3" /> },
+        { name: "Profile", href: '/profile', icon: <User className="mr-3" /> },
+      ];
   // Pull authenticated user from shared Inertia props (fallback for dev)
   const user = props?.auth?.user ?? {
     name: "User",

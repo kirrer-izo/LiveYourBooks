@@ -25,8 +25,8 @@ export default function Welcome() {
     </div>
 
     <nav className="flex items-center gap-3">
-      <Link href={login()} className="text-sm font-medium text-slate-700 hover:underline">Log in</Link>
-      <Link href={ register() } className="ml-2 inline-flex items-center px-4 py-2 rounded-md bg-blue-500 text-white text-sm font-semibold shadow hover:bg-blue-600">
+      <Link href={login().url} className="text-sm font-medium text-slate-700 hover:underline">Log in</Link>
+      <Link href={register().url} className="ml-2 inline-flex items-center px-4 py-2 rounded-md bg-blue-500 text-white text-sm font-semibold shadow hover:bg-blue-600">
         Sign up
       </Link>
     </nav>
@@ -57,12 +57,12 @@ export default function Welcome() {
           </ul>
 
           <div className="mt-8 flex gap-3">
-            <a href="{{ route('register') }}" className="inline-flex items-center px-5 py-3 bg-blue-500 text-white rounded-md font-semibold shadow hover:bg-blue-600">
+            <Link href={register().url} className="inline-flex items-center px-5 py-3 bg-blue-500 text-white rounded-md font-semibold shadow hover:bg-blue-600">
               Get started
-            </a>
-            <a href="{{ route('login') }}" className="inline-flex items-center px-5 py-3 border border-slate-200 rounded-md text-slate-700 hover:bg-slate-50">
+            </Link>
+            <Link href={login().url} className="inline-flex items-center px-5 py-3 border border-slate-200 rounded-md text-slate-700 hover:bg-slate-50">
               Explore demo
-            </a>
+            </Link>
           </div>
         </div>
 
@@ -101,3 +101,4 @@ export default function Welcome() {
         </>
     );
 }
+

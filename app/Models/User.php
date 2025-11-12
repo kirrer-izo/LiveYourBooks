@@ -9,6 +9,7 @@ use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use App\Models\Conversation;
 use App\Models\Thinker;
+use App\Enums\UserRole;
 
 class User extends Authenticatable
 {
@@ -28,6 +29,8 @@ class User extends Authenticatable
         'streak',
         'books_read',
         'habits_completed',
+        'role',
+        'is_active',
         'notification_preferences',
     ];
 
@@ -52,6 +55,8 @@ class User extends Authenticatable
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
             'notification_preferences' => 'array',
+            'role' => UserRole::class,
+            'is_active' => 'boolean',
         ];
     }
 

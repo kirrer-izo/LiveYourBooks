@@ -20,17 +20,14 @@ class BookFactory extends Factory
      */
     public function definition(): array
     {
-        $progress = fake()->numberBetween(0, 100);
         return [
-            'user_id' => User::find(1),
+            'user_id' => User::query()->inRandomOrder()->value('id') ?? User::factory(),
             'title' => fake()->unique()->sentence(3, true),
             'author' => fake()->name(),
             'genre' => $this->faker->randomElement(array_map(fn($c) => $c->value, Genre::cases())),
             'life_area' => $this->faker->randomElement(array_map(fn($c) => $c->value, LifeArea::cases())),
             'cover_img' => fake()->imageUrl(200, 300, 'books', true, 'Faker'),
-            'progress' => $progress,
-            'is_completed' => $progress === 100,
-            
+            'is_completed' => fake()->boolean(20),
         ];
     }
 }

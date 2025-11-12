@@ -90,7 +90,7 @@ export default function Login({ status, canResetPassword }: LoginProps) {
 
                     <div className="text-center text-sm">
                         Don't have an account?{' '}
-                        <TextLink href={register()} className="text-indigo-600 hover:text-indigo-500">
+                        <TextLink href={register().url} className="text-indigo-600 hover:text-indigo-500">
                             Sign up
                         </TextLink>
                     </div>

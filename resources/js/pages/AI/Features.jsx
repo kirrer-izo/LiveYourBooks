@@ -26,8 +26,11 @@ export default function AIFeatures({ thinkers, books }) {
     // Advice state
     const [adviceData, setAdviceData] = useState({
         thinkerId: '',
+        customThinker: '',
         bookId: '',
+        customBook: '',
         lifeArea: '',
+        customLifeArea: '',
         goals: []
     });
 
@@ -46,8 +49,11 @@ export default function AIFeatures({ thinkers, books }) {
     // Habit suggestions state
     const [habitData, setHabitData] = useState({
         bookId: '',
+        customBook: '',
         thinkerId: '',
+        customThinker: '',
         lifeArea: '',
+        customLifeArea: '',
         goals: []
     });
     const [habitSuggestions, setHabitSuggestions] = useState([]);
@@ -87,8 +93,11 @@ export default function AIFeatures({ thinkers, books }) {
             // Prepare data - convert empty strings to null
             const requestData = {
                 thinker_id: adviceData.thinkerId && adviceData.thinkerId !== '' ? adviceData.thinkerId : null,
-                book_id: adviceData.bookId && adviceData.bookId !== '' ? adviceData.bookId : null,
+                custom_thinker_name: adviceData.customThinker || null,
+                book_id: adviceData.bookId && adviceData.bookId !== '' ? parseInt(adviceData.bookId, 10) : null,
+                custom_book_title: adviceData.customBook || null,
                 life_area: adviceData.lifeArea && adviceData.lifeArea !== '' ? adviceData.lifeArea : null,
+                custom_life_area: adviceData.customLifeArea || null,
                 goals: adviceData.goals || [],
             };
 
@@ -168,6 +177,63 @@ export default function AIFeatures({ thinkers, books }) {
         setAdviceData(prev => ({
             ...prev,
             goals: prev.goals.filter((_, i) => i !== index)
+        }));
+    };
+
+    const addCustomAdviceThinker = () => {
+        const custom = prompt('Enter a custom thinker or mentor name:');
+        if (custom && custom.trim()) {
+            setAdviceData(prev => ({
+                ...prev,
+                thinkerId: '',
+                customThinker: custom.trim()
+            }));
+        }
+    };
+
+    const clearCustomAdviceThinker = () => {
+        setAdviceData(prev => ({
+            ...prev,
+            thinkerId: '',
+            customThinker: ''
+        }));
+    };
+
+    const addCustomAdviceBook = () => {
+        const custom = prompt('Enter a custom book title:');
+        if (custom && custom.trim()) {
+            setAdviceData(prev => ({
+                ...prev,
+                bookId: '',
+                customBook: custom.trim()
+            }));
+        }
+    };
+
+    const clearCustomAdviceBook = () => {
+        setAdviceData(prev => ({
+            ...prev,
+            bookId: '',
+            customBook: ''
+        }));
+    };
+
+    const addCustomAdviceLifeArea = () => {
+        const custom = prompt('Enter a custom life area focus:');
+        if (custom && custom.trim()) {
+            setAdviceData(prev => ({
+                ...prev,
+                lifeArea: '',
+                customLifeArea: custom.trim()
+            }));
+        }
+    };
+
+    const clearCustomAdviceLifeArea = () => {
+        setAdviceData(prev => ({
+            ...prev,
+            lifeArea: '',
+            customLifeArea: ''
         }));
     };
 
@@ -257,13 +323,23 @@ export default function AIFeatures({ thinkers, books }) {
         setLoading(true);
         setError(null);
         try {
+            const requestData = {
+                thinker_id: habitData.thinkerId && habitData.thinkerId !== '' ? habitData.thinkerId : null,
+                custom_thinker_name: habitData.customThinker || null,
+                book_id: habitData.bookId && habitData.bookId !== '' ? parseInt(habitData.bookId, 10) : null,
+                custom_book_title: habitData.customBook || null,
+                life_area: habitData.lifeArea && habitData.lifeArea !== '' ? habitData.lifeArea : null,
+                custom_life_area: habitData.customLifeArea || null,
+                goals: habitData.goals || [],
+            };
+
             const response = await fetch('/ai/generate-habit-suggestions', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
                     'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.content || '',
                 },
-                body: JSON.stringify(habitData),
+                body: JSON.stringify(requestData),
             });
 
             const data = await response.json();
@@ -288,6 +364,8 @@ export default function AIFeatures({ thinkers, books }) {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
+                    'Accept': 'application/json',
+                    'X-Requested-With': 'XMLHttpRequest',
                     'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.content || '',
                 },
                 body: JSON.stringify({
@@ -299,17 +377,26 @@ export default function AIFeatures({ thinkers, books }) {
                 }),
             });
 
-            const data = await response.json();
-            if (data.success) {
+            const data = await response.json().catch(() => null);
+
+            if (!response.ok) {
+                const validationMessage =
+                    data?.message ||
+                    (data?.errors ? Object.values(data.errors).flat().find(Boolean) : null) ||
+                    'Failed to create habit';
+                throw new Error(validationMessage);
+            }
+
+            if (data?.success) {
                 alert(data.message || 'Habit created successfully!');
                 // Remove the suggestion from the list
                 setHabitSuggestions(prev => prev.filter(s => s.name !== suggestion.name));
             } else {
-                setError(data.message || 'Failed to create habit');
+                setError(data?.message || 'Failed to create habit');
             }
         } catch (error) {
             console.error('Error creating habit:', error);
-            setError('Failed to create habit. Please try again.');
+            setError(error.message || 'Failed to create habit. Please try again.');
         } finally {
             setCreatingHabit(null);
         }
@@ -329,6 +416,63 @@ export default function AIFeatures({ thinkers, books }) {
         setHabitData(prev => ({
             ...prev,
             goals: prev.goals.filter((_, i) => i !== index)
+        }));
+    };
+
+    const addCustomHabitThinker = () => {
+        const custom = prompt('Enter a custom thinker or mentor name:');
+        if (custom && custom.trim()) {
+            setHabitData(prev => ({
+                ...prev,
+                thinkerId: '',
+                customThinker: custom.trim()
+            }));
+        }
+    };
+
+    const clearCustomHabitThinker = () => {
+        setHabitData(prev => ({
+            ...prev,
+            thinkerId: '',
+            customThinker: ''
+        }));
+    };
+
+    const addCustomHabitBook = () => {
+        const custom = prompt('Enter a custom book title:');
+        if (custom && custom.trim()) {
+            setHabitData(prev => ({
+                ...prev,
+                bookId: '',
+                customBook: custom.trim()
+            }));
+        }
+    };
+
+    const clearCustomHabitBook = () => {
+        setHabitData(prev => ({
+            ...prev,
+            bookId: '',
+            customBook: ''
+        }));
+    };
+
+    const addCustomHabitLifeArea = () => {
+        const custom = prompt('Enter a custom life area focus:');
+        if (custom && custom.trim()) {
+            setHabitData(prev => ({
+                ...prev,
+                lifeArea: '',
+                customLifeArea: custom.trim()
+            }));
+        }
+    };
+
+    const clearCustomHabitLifeArea = () => {
+        setHabitData(prev => ({
+            ...prev,
+            lifeArea: '',
+            customLifeArea: ''
         }));
     };
 
@@ -656,64 +800,148 @@ ${insights.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')}
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                     <div>
                                         <Label htmlFor="thinker">Thinker (Optional)</Label>
-                                        <Select 
-                                            value={adviceData.thinkerId} 
-                                            onValueChange={(value) => setAdviceData(prev => ({ ...prev, thinkerId: value }))}
-                                        >
-                                            <SelectTrigger>
-                                                <SelectValue placeholder="Select a thinker" />
-                                            </SelectTrigger>
-                                            <SelectContent>
-                                                {thinkers && thinkers.length > 0 ? (
-                                                    thinkers.map((thinker) => (
-                                                        <SelectItem key={thinker.id} value={thinker.id.toString()}>
-                                                            {thinker.name}
-                                                        </SelectItem>
-                                                    ))
-                                                ) : (
-                                                    <SelectItem value="" disabled>No thinkers available</SelectItem>
-                                                )}
-                                            </SelectContent>
-                                        </Select>
+                                        <div className="flex items-center gap-2">
+                                            {adviceData.customThinker ? (
+                                                <>
+                                                    <Input
+                                                        value={adviceData.customThinker}
+                                                        readOnly
+                                                        className="flex-1"
+                                                    />
+                                                    <Button
+                                                        size="sm"
+                                                        variant="outline"
+                                                        onClick={clearCustomAdviceThinker}
+                                                    >
+                                                        Clear custom
+                                                    </Button>
+                                                </>
+                                            ) : (
+                                                <>
+                                                    <Select
+                                                        value={adviceData.thinkerId}
+                                                        onValueChange={(value) => setAdviceData(prev => ({ ...prev, thinkerId: value, customThinker: '' }))}
+                                                    >
+                                                        <SelectTrigger className="w-full">
+                                                            <SelectValue placeholder="Select a thinker" />
+                                                        </SelectTrigger>
+                                                        <SelectContent>
+                                                            {thinkers && thinkers.length > 0 ? (
+                                                                thinkers.map((thinker) => (
+                                                                    <SelectItem key={thinker.id} value={thinker.id.toString()}>
+                                                                        {thinker.name}
+                                                                    </SelectItem>
+                                                                ))
+                                                            ) : (
+                                                                <SelectItem value="" disabled>No thinkers available</SelectItem>
+                                                            )}
+                                                        </SelectContent>
+                                                    </Select>
+                                                    <Button
+                                                        size="sm"
+                                                        variant="outline"
+                                                        onClick={addCustomAdviceThinker}
+                                                    >
+                                                        Add custom
+                                                    </Button>
+                                                </>
+                                            )}
+                                        </div>
                                     </div>
                                     
                                     <div>
                                         <Label htmlFor="book">Book (Optional)</Label>
-                                        <Select 
-                                            value={adviceData.bookId} 
-                                            onValueChange={(value) => setAdviceData(prev => ({ ...prev, bookId: value }))}
-                                        >
-                                            <SelectTrigger>
-                                                <SelectValue placeholder="Select a book" />
-                                            </SelectTrigger>
-                                            <SelectContent>
-                                                {books.map((book) => (
-                                                    <SelectItem key={book.id} value={book.id.toString()}>
-                                                        {book.title}
-                                                    </SelectItem>
-                                                ))}
-                                            </SelectContent>
-                                        </Select>
+                                        <div className="flex items-center gap-2">
+                                            {adviceData.customBook ? (
+                                                <>
+                                                    <Input
+                                                        value={adviceData.customBook}
+                                                        readOnly
+                                                        className="flex-1"
+                                                    />
+                                                    <Button
+                                                        size="sm"
+                                                        variant="outline"
+                                                        onClick={clearCustomAdviceBook}
+                                                    >
+                                                        Clear custom
+                                                    </Button>
+                                                </>
+                                            ) : (
+                                                <>
+                                                    <Select
+                                                        value={adviceData.bookId}
+                                                        onValueChange={(value) => setAdviceData(prev => ({ ...prev, bookId: value, customBook: '' }))}
+                                                    >
+                                                        <SelectTrigger className="w-full">
+                                                            <SelectValue placeholder="Select a book" />
+                                                        </SelectTrigger>
+                                                        <SelectContent>
+                                                            {books.map((book) => (
+                                                                <SelectItem key={book.id} value={book.id.toString()}>
+                                                                    {book.title}
+                                                                </SelectItem>
+                                                            ))}
+                                                        </SelectContent>
+                                                    </Select>
+                                                    <Button
+                                                        size="sm"
+                                                        variant="outline"
+                                                        onClick={addCustomAdviceBook}
+                                                    >
+                                                        Add custom
+                                                    </Button>
+                                                </>
+                                            )}
+                                        </div>
                                     </div>
                                 </div>
 
                                 <div>
                                     <Label htmlFor="lifeArea">Life Area (Optional)</Label>
-                                    <Select 
-                                        value={adviceData.lifeArea} 
-                                        onValueChange={(value) => setAdviceData(prev => ({ ...prev, lifeArea: value }))}
-                                    >
-                                        <SelectTrigger>
-                                            <SelectValue placeholder="Select a life area" />
-                                        </SelectTrigger>
-                                        <SelectContent>
-                                            <SelectItem value="health">Health & Wellness</SelectItem>
-                                            <SelectItem value="career">Career & Professional</SelectItem>
-                                            <SelectItem value="relationships">Relationships</SelectItem>
-                                            <SelectItem value="personal_growth">Personal Growth</SelectItem>
-                                            <SelectItem value="learning">Learning & Development</SelectItem>
-                                        </SelectContent>
-                                    </Select>
+                                    <div className="flex items-center gap-2">
+                                        {adviceData.customLifeArea ? (
+                                            <>
+                                                <Input
+                                                    value={adviceData.customLifeArea}
+                                                    readOnly
+                                                    className="flex-1"
+                                                />
+                                                <Button
+                                                    size="sm"
+                                                    variant="outline"
+                                                    onClick={clearCustomAdviceLifeArea}
+                                                >
+                                                    Clear custom
+                                                </Button>
+                                            </>
+                                        ) : (
+                                            <>
+                                                <Select
+                                                    value={adviceData.lifeArea}
+                                                    onValueChange={(value) => setAdviceData(prev => ({ ...prev, lifeArea: value, customLifeArea: '' }))}
+                                                >
+                                                    <SelectTrigger className="w-full">
+                                                        <SelectValue placeholder="Select a life area" />
+                                                    </SelectTrigger>
+                                                    <SelectContent>
+                                                        <SelectItem value="health">Health & Wellness</SelectItem>
+                                                        <SelectItem value="career">Career & Professional</SelectItem>
+                                                        <SelectItem value="relationships">Relationships</SelectItem>
+                                                        <SelectItem value="personal_growth">Personal Growth</SelectItem>
+                                                        <SelectItem value="learning">Learning & Development</SelectItem>
+                                                    </SelectContent>
+                                                </Select>
+                                                <Button
+                                                    size="sm"
+                                                    variant="outline"
+                                                    onClick={addCustomAdviceLifeArea}
+                                                >
+                                                    Add custom
+                                                </Button>
+                                            </>
+                                        )}
+                                    </div>
                                 </div>
 
                                 <div>
@@ -827,64 +1055,148 @@ ${insights.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')}
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                     <div>
                                         <Label htmlFor="habit-thinker">Thinker (Optional)</Label>
-                                        <Select 
-                                            value={habitData.thinkerId} 
-                                            onValueChange={(value) => setHabitData(prev => ({ ...prev, thinkerId: value }))}
-                                        >
-                                            <SelectTrigger>
-                                                <SelectValue placeholder="Select a thinker" />
-                                            </SelectTrigger>
-                                            <SelectContent>
-                                                {thinkers && thinkers.length > 0 ? (
-                                                    thinkers.map((thinker) => (
-                                                        <SelectItem key={thinker.id} value={thinker.id.toString()}>
-                                                            {thinker.name}
-                                                        </SelectItem>
-                                                    ))
-                                                ) : (
-                                                    <SelectItem value="" disabled>No thinkers available</SelectItem>
-                                                )}
-                                            </SelectContent>
-                                        </Select>
+                                        <div className="flex items-center gap-2">
+                                            {habitData.customThinker ? (
+                                                <>
+                                                    <Input
+                                                        value={habitData.customThinker}
+                                                        readOnly
+                                                        className="flex-1"
+                                                    />
+                                                    <Button
+                                                        size="sm"
+                                                        variant="outline"
+                                                        onClick={clearCustomHabitThinker}
+                                                    >
+                                                        Clear custom
+                                                    </Button>
+                                                </>
+                                            ) : (
+                                                <>
+                                                    <Select
+                                                        value={habitData.thinkerId}
+                                                        onValueChange={(value) => setHabitData(prev => ({ ...prev, thinkerId: value, customThinker: '' }))}
+                                                    >
+                                                        <SelectTrigger className="w-full">
+                                                            <SelectValue placeholder="Select a thinker" />
+                                                        </SelectTrigger>
+                                                        <SelectContent>
+                                                            {thinkers && thinkers.length > 0 ? (
+                                                                thinkers.map((thinker) => (
+                                                                    <SelectItem key={thinker.id} value={thinker.id.toString()}>
+                                                                        {thinker.name}
+                                                                    </SelectItem>
+                                                                ))
+                                                            ) : (
+                                                                <SelectItem value="" disabled>No thinkers available</SelectItem>
+                                                            )}
+                                                        </SelectContent>
+                                                    </Select>
+                                                    <Button
+                                                        size="sm"
+                                                        variant="outline"
+                                                        onClick={addCustomHabitThinker}
+                                                    >
+                                                        Add custom
+                                                    </Button>
+                                                </>
+                                            )}
+                                        </div>
                                     </div>
                                     
                                     <div>
                                         <Label htmlFor="habit-book">Book (Optional)</Label>
-                                        <Select 
-                                            value={habitData.bookId} 
-                                            onValueChange={(value) => setHabitData(prev => ({ ...prev, bookId: value }))}
-                                        >
-                                            <SelectTrigger>
-                                                <SelectValue placeholder="Select a book" />
-                                            </SelectTrigger>
-                                            <SelectContent>
-                                                {books.map((book) => (
-                                                    <SelectItem key={book.id} value={book.id.toString()}>
-                                                        {book.title}
-                                                    </SelectItem>
-                                                ))}
-                                            </SelectContent>
-                                        </Select>
+                                        <div className="flex items-center gap-2">
+                                            {habitData.customBook ? (
+                                                <>
+                                                    <Input
+                                                        value={habitData.customBook}
+                                                        readOnly
+                                                        className="flex-1"
+                                                    />
+                                                    <Button
+                                                        size="sm"
+                                                        variant="outline"
+                                                        onClick={clearCustomHabitBook}
+                                                    >
+                                                        Clear custom
+                                                    </Button>
+                                                </>
+                                            ) : (
+                                                <>
+                                                    <Select
+                                                        value={habitData.bookId}
+                                                        onValueChange={(value) => setHabitData(prev => ({ ...prev, bookId: value, customBook: '' }))}
+                                                    >
+                                                        <SelectTrigger className="w-full">
+                                                            <SelectValue placeholder="Select a book" />
+                                                        </SelectTrigger>
+                                                        <SelectContent>
+                                                            {books.map((book) => (
+                                                                <SelectItem key={book.id} value={book.id.toString()}>
+                                                                    {book.title}
+                                                                </SelectItem>
+                                                            ))}
+                                                        </SelectContent>
+                                                    </Select>
+                                                    <Button
+                                                        size="sm"
+                                                        variant="outline"
+                                                        onClick={addCustomHabitBook}
+                                                    >
+                                                        Add custom
+                                                    </Button>
+                                                </>
+                                            )}
+                                        </div>
                                     </div>
                                 </div>
 
                                 <div>
                                     <Label htmlFor="habit-life-area">Life Area (Optional)</Label>
-                                    <Select 
-                                        value={habitData.lifeArea} 
-                                        onValueChange={(value) => setHabitData(prev => ({ ...prev, lifeArea: value }))}
-                                    >
-                                        <SelectTrigger>
-                                            <SelectValue placeholder="Select a life area" />
-                                        </SelectTrigger>
-                                        <SelectContent>
-                                            <SelectItem value="health">Health & Wellness</SelectItem>
-                                            <SelectItem value="career">Career & Professional</SelectItem>
-                                            <SelectItem value="relationships">Relationships</SelectItem>
-                                            <SelectItem value="personal_growth">Personal Growth</SelectItem>
-                                            <SelectItem value="learning">Learning & Development</SelectItem>
-                                        </SelectContent>
-                                    </Select>
+                                    <div className="flex items-center gap-2">
+                                        {habitData.customLifeArea ? (
+                                            <>
+                                                <Input
+                                                    value={habitData.customLifeArea}
+                                                    readOnly
+                                                    className="flex-1"
+                                                />
+                                                <Button
+                                                    size="sm"
+                                                    variant="outline"
+                                                    onClick={clearCustomHabitLifeArea}
+                                                >
+                                                    Clear custom
+                                                </Button>
+                                            </>
+                                        ) : (
+                                            <>
+                                                <Select
+                                                    value={habitData.lifeArea}
+                                                    onValueChange={(value) => setHabitData(prev => ({ ...prev, lifeArea: value, customLifeArea: '' }))}
+                                                >
+                                                    <SelectTrigger className="w-full">
+                                                        <SelectValue placeholder="Select a life area" />
+                                                    </SelectTrigger>
+                                                    <SelectContent>
+                                                        <SelectItem value="health">Health & Wellness</SelectItem>
+                                                        <SelectItem value="career">Career & Professional</SelectItem>
+                                                        <SelectItem value="relationships">Relationships</SelectItem>
+                                                        <SelectItem value="personal_growth">Personal Growth</SelectItem>
+                                                        <SelectItem value="learning">Learning & Development</SelectItem>
+                                                    </SelectContent>
+                                                </Select>
+                                                <Button
+                                                    size="sm"
+                                                    variant="outline"
+                                                    onClick={addCustomHabitLifeArea}
+                                                >
+                                                    Add custom
+                                                </Button>
+                                            </>
+                                        )}
+                                    </div>
                                 </div>
 
                                 <div>

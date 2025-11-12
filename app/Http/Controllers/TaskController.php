@@ -75,6 +75,7 @@ class TaskController extends Controller
         $tasks = $query->orderBy('is_completed')
                       ->orderByRaw($priorityOrder)
                       ->orderBy('due_date')
+                      ->orderBy('created_at', 'desc')
                       ->paginate(20)
                       ->withQueryString();
         
@@ -139,6 +140,11 @@ class TaskController extends Controller
     {
         $this->authorize('update', $task);
         
+        // Ensure task belongs to the authenticated user
+        if ($task->user_id !== Auth::id()) {
+            abort(403);
+        }
+        
         $books = Book::where('user_id', Auth::id())
                     ->select('id', 'title', 'author')
                     ->orderBy('title')
@@ -150,8 +156,20 @@ class TaskController extends Controller
                       ->orderBy('name')
                       ->get();
         
+        // Prepare task data for the view
+        $taskData = [
+            'id' => $task->id,
+            'title' => $task->title ?? '',
+            'description' => $task->description ?? '',
+            'priority' => $task->priority ?? 'medium',
+            'due_date' => $task->due_date,
+            'book_id' => $task->book_id,
+            'habit_id' => $task->habit_id,
+            'is_completed' => $task->is_completed ?? false,
+        ];
+        
         return inertia('Tasks/Edit', [
-            'task' => $task,
+            'task' => $taskData,
             'books' => $books,
             'habits' => $habits,
         ]);

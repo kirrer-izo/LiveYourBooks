@@ -91,7 +91,7 @@ export default function Register() {
             </Form>
                         <div className="text-center text-sm text-muted-foreground">
                         
-                            <TextLink className="text-sm text-indigo-600 hover:text-indigo-500" href={login()} tabIndex={6}>
+                            <TextLink className="text-sm text-indigo-600 hover:text-indigo-500" href={login().url} tabIndex={6}>
                              Already have an account?   Log in
                             </TextLink>
                         </div>
