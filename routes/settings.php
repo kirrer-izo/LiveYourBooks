@@ -40,6 +40,7 @@ Route::middleware('auth')->group(function () {
                 'task_reminder_days' => $preferences->task_reminder_days ?? [1, 2, 3, 4, 5, 6, 7],
                 'timezone' => $preferences->timezone,
             ],
+            'timezones' => \DateTimeZone::listIdentifiers(),
         ]);
     })->name('notifications.edit');
 

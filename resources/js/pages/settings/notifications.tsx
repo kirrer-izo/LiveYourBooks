@@ -36,9 +36,10 @@ const DAYS = [
 
 interface Props {
     preferences: NotificationPreferences;
+    timezones: string[];
 }
 
-export default function Notifications({ preferences: initialPreferences }: Props) {
+export default function Notifications({ preferences: initialPreferences, timezones }: Props) {
     const { flash } = usePage().props as any;
     const [preferences, setPreferences] = useState<NotificationPreferences>(initialPreferences);
     const [saving, setSaving] = useState(false);
@@ -327,6 +328,41 @@ export default function Notifications({ preferences: initialPreferences }: Props
                                         </div>
                                     </>
                                 )}
+                            </CardContent>
+                        </Card>
+
+                        {/* Timezone */}
+                        <Card>
+                            <CardHeader>
+                                <CardTitle className="flex items-center gap-2">
+                                    <Clock className="h-5 w-5" />
+                                    Timezone
+                                </CardTitle>
+                                <CardDescription>
+                                    Choose the timezone used to schedule reminder times
+                                </CardDescription>
+                            </CardHeader>
+                            <CardContent className="space-y-4">
+                                <div className="grid gap-2 max-w-xl">
+                                    <Label htmlFor="timezone">Timezone</Label>
+                                    <select
+                                        id="timezone"
+                                        className="border rounded px-3 py-2 bg-background text-foreground"
+                                        value={preferences.timezone}
+                                        onChange={(e) =>
+                                            setPreferences({
+                                                ...preferences,
+                                                timezone: e.target.value,
+                                            })
+                                        }
+                                    >
+                                        {timezones.map((tz) => (
+                                            <option key={tz} value={tz}>
+                                                {tz}
+                                            </option>
+                                        ))}
+                                    </select>
+                                </div>
                             </CardContent>
                         </Card>
 

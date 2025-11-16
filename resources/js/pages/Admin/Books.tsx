@@ -64,6 +64,12 @@ function AdminBooks({ books, filters }: PageProps) {
     life_area: '',
   });
 
+  const bulkForm = useForm({
+    books: [
+      { title: '', author: '', genre: '', life_area: '' },
+    ],
+  });
+
   const editForms = new Map<number, ReturnType<typeof useForm>>();
 
   const applySearch = () =>
@@ -181,6 +187,129 @@ function AdminBooks({ books, filters }: PageProps) {
               >
                 Save
               </button>
+            </div>
+          </form>
+        </section>
+
+        <section className="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-sm">
+          <div className="px-6 py-4 border-b border-slate-100 dark:border-slate-800">
+            <h2 className="text-lg font-semibold text-slate-900 dark:text-slate-100">Add Multiple Books</h2>
+          </div>
+          <form
+            onSubmit={(e) => {
+              e.preventDefault();
+              const valid = Array.isArray(bulkForm.data.books) && bulkForm.data.books.length > 0 && bulkForm.data.books.every((b) => b.title && b.title.trim() !== '');
+              if (!valid) return;
+              bulkForm.post('/admin/books/bulk', {
+                preserveScroll: true,
+                onSuccess: () => bulkForm.setData({ books: [{ title: '', author: '', genre: '', life_area: '' }] }),
+              });
+            }}
+            className="px-6 py-4 grid gap-4"
+          >
+            <div className="overflow-x-auto">
+              <table className="min-w-full text-sm">
+                <thead className="bg-slate-50 dark:bg-slate-800/50 text-left text-xs uppercase tracking-wide text-slate-500 dark:text-slate-400">
+                  <tr>
+                    <th className="px-3 py-2 font-semibold">Title</th>
+                    <th className="px-3 py-2 font-semibold">Author</th>
+                    <th className="px-3 py-2 font-semibold">Genre</th>
+                    <th className="px-3 py-2 font-semibold">Life Area</th>
+                    <th className="px-3 py-2 font-semibold text-right">Actions</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
+                  {bulkForm.data.books.map((b, idx) => (
+                    <tr key={idx}>
+                      <td className="px-3 py-2">
+                        <input
+                          required
+                          value={b.title}
+                          onChange={(e) => {
+                            const booksData = [...bulkForm.data.books];
+                            booksData[idx] = { ...booksData[idx], title: e.target.value };
+                            bulkForm.setData('books', booksData as any);
+                          }}
+                          className="w-full rounded-md border border-slate-300 px-3 py-2 text-sm shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-200 dark:border-slate-700 dark:bg-slate-800 dark:text-white"
+                        />
+                      </td>
+                      <td className="px-3 py-2">
+                        <input
+                          value={b.author ?? ''}
+                          onChange={(e) => {
+                            const booksData = [...bulkForm.data.books];
+                            booksData[idx] = { ...booksData[idx], author: e.target.value };
+                            bulkForm.setData('books', booksData as any);
+                          }}
+                          className="w-full rounded-md border border-slate-300 px-3 py-2 text-sm shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-200 dark:border-slate-700 dark:bg-slate-800 dark:text-white"
+                        />
+                      </td>
+                      <td className="px-3 py-2">
+                        <input
+                          value={b.genre ?? ''}
+                          onChange={(e) => {
+                            const booksData = [...bulkForm.data.books];
+                            booksData[idx] = { ...booksData[idx], genre: e.target.value };
+                            bulkForm.setData('books', booksData as any);
+                          }}
+                          className="w-full rounded-md border border-slate-300 px-3 py-2 text-sm shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-200 dark:border-slate-700 dark:bg-slate-800 dark:text-white"
+                        />
+                      </td>
+                      <td className="px-3 py-2">
+                        <input
+                          value={b.life_area ?? ''}
+                          onChange={(e) => {
+                            const booksData = [...bulkForm.data.books];
+                            booksData[idx] = { ...booksData[idx], life_area: e.target.value };
+                            bulkForm.setData('books', booksData as any);
+                          }}
+                          className="w-full rounded-md border border-slate-300 px-3 py-2 text-sm shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-200 dark:border-slate-700 dark:bg-slate-800 dark:text-white"
+                        />
+                      </td>
+                      <td className="px-3 py-2 text-right">
+                        <div className="flex justify-end gap-2">
+                          <button
+                            type="button"
+                            onClick={() => {
+                              const booksData = [...bulkForm.data.books];
+                              booksData.splice(idx, 1);
+                              bulkForm.setData('books', booksData.length ? (booksData as any) : ([{ title: '', author: '', genre: '', life_area: '' }] as any));
+                            }}
+                            className="rounded-md border border-rose-300 px-3 py-1 text-xs font-medium text-rose-600 transition hover:bg-rose-50 dark:border-rose-600 dark:text-rose-300 dark:hover:bg-rose-500/20"
+                          >
+                            Remove
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+            <div className="flex justify-between items-center">
+              <button
+                type="button"
+                onClick={() => bulkForm.setData('books', [...bulkForm.data.books, { title: '', author: '', genre: '', life_area: '' }] as any)}
+                className="rounded-md border border-slate-300 px-4 py-2 text-sm font-medium text-slate-600 transition hover:bg-slate-100 dark:border-slate-600 dark:text-slate-300 dark:hover:bg-slate-800"
+              >
+                Add Row
+              </button>
+              <div className="flex gap-2">
+                <button
+                  type="button"
+                  onClick={() => bulkForm.setData({ books: [{ title: '', author: '', genre: '', life_area: '' }] })}
+                  className="px-4 py-2 text-sm font-medium text-slate-600 dark:text-slate-300"
+                >
+                  Reset
+                </button>
+                <button
+                  type="submit"
+                  disabled={bulkForm.processing || !bulkForm.data.books.length || bulkForm.data.books.some((b) => !b.title || b.title.trim() === '')}
+                  className="inline-flex items-center rounded-md bg-indigo-600 px-4 py-2 text-sm font-medium text-white shadow-sm transition hover:bg-indigo-500 disabled:opacity-60"
+                >
+                  Save All
+                </button>
+              </div>
             </div>
           </form>
         </section>

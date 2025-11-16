@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use App\Notifications\StreakAchieved;
 
 class Habit extends Model
 {
@@ -79,6 +80,7 @@ class Habit extends Model
         }
         
         // Check if we're continuing a streak or starting fresh
+        $previousStreak = (int) $this->streak;
         if ($lastCompleted === now()->subDay()->toDateString()) {
             // Continuing streak
             $this->increment('streak');
@@ -89,6 +91,12 @@ class Habit extends Model
         
         $this->last_completed = now();
         $this->save();
+
+        // Notify user when certain streak milestones are achieved
+        $milestones = [3, 7, 14, 30];
+        if (in_array((int) $this->streak, $milestones, true) && $this->user) {
+            $this->user->notify(new StreakAchieved($this, (int) $this->streak));
+        }
     }
 
     /**

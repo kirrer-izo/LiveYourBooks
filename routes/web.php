@@ -106,6 +106,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
             Route::resource('books', AdminBookController::class);
             Route::get('/books', [AdminBookController::class, 'index'])->name('books.index');
             Route::post('/books', [AdminBookController::class, 'store'])->name('books.store');
+            Route::post('/books/bulk', [AdminBookController::class, 'bulkStore'])->name('books.bulk');
             Route::put('/books/{book}', [AdminBookController::class, 'update'])->name('books.update');
             Route::delete('/books/{book}', [AdminBookController::class, 'destroy'])->name('books.destroy');
 

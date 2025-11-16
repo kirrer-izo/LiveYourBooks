@@ -57,6 +57,7 @@ class AdminDashboardController extends Controller
             'recentUsers' => $recentUsers,
             'featuredCatalog' => $featuredCatalog,
             'integrations' => $integrations,
+            'roles' => UserRole::options(),
         ]);
     }
 }

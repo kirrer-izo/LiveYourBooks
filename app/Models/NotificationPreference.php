@@ -69,7 +69,9 @@ class NotificationPreference extends Model
             return false;
         }
         
-        $currentDay = now()->dayOfWeekIso; // 1-7 (Monday-Sunday)
+        // Use user's timezone (fallback to app timezone) to determine local day-of-week
+        $timezone = $this->timezone ?: config('app.timezone');
+        $currentDay = now($timezone)->dayOfWeekIso; // 1-7 (Monday-Sunday)
         $days = $this->$daysField ?? [];
         
         return in_array($currentDay, $days);

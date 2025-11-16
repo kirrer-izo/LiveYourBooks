@@ -1,5 +1,5 @@
 import AppLayout from '@/layouts/AppLayout';
-import { Head, router } from '@inertiajs/react';
+import { Head, router, useForm } from '@inertiajs/react';
 import { BadgeCheck, CircleOff, Mail, Search, UserCog } from 'lucide-react';
 import { useEffect, useState, type ReactNode } from 'react';
 
@@ -59,6 +59,22 @@ interface UsersPageProps {
 
 function AdminUsers({ users, filters, roles }: UsersPageProps) {
     const [searchValue, setSearchValue] = useState(filters.search ?? '');
+    const createForm = useForm({
+        name: '',
+        email: '',
+        password: '',
+        role: roles?.[0]?.value ?? 'user',
+        is_active: true as boolean | undefined,
+    });
+
+    const [editing, setEditing] = useState<UserListItem | null>(null);
+    const editForm = useForm({
+        name: '',
+        email: '',
+        password: '',
+        role: roles?.[0]?.value ?? 'user',
+        is_active: true as boolean | undefined,
+    });
 
     useEffect(() => {
         setSearchValue(filters.search ?? '');
@@ -101,6 +117,26 @@ function AdminUsers({ users, filters, roles }: UsersPageProps) {
         );
     };
 
+    const openEdit = (user: UserListItem) => {
+        setEditing(user);
+        editForm.setData({
+            name: user.name,
+            email: user.email,
+            password: '',
+            role: user.role,
+            is_active: user.is_active,
+        });
+    };
+
+    const submitEdit = (e: React.FormEvent) => {
+        e.preventDefault();
+        if (!editing) return;
+        editForm.put(`/admin/users/${editing.id}`, {
+            preserveScroll: true,
+            onSuccess: () => setEditing(null),
+        });
+    };
+
     return (
         <>
             <Head title="Manage Users" />
@@ -110,7 +146,184 @@ function AdminUsers({ users, filters, roles }: UsersPageProps) {
                         <h1 className="text-2xl font-semibold text-slate-900 dark:text-slate-100">User Directory</h1>
                         <p className="text-sm text-slate-500 dark:text-slate-400">Promote, deactivate, and oversee members across the platform.</p>
                     </div>
+
+            {editing && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
+                    <div className="w-full max-w-lg rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 shadow-xl">
+                        <div className="px-6 py-4 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between">
+                            <h3 className="text-lg font-semibold text-slate-900 dark:text-slate-100">Edit User</h3>
+                            <button
+                                type="button"
+                                onClick={() => setEditing(null)}
+                                className="text-sm text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200"
+                            >
+                                Close
+                            </button>
+                        </div>
+                        <form onSubmit={submitEdit} className="px-6 py-4 grid gap-4">
+                            <label className="text-sm">
+                                <span className="block text-slate-600 dark:text-slate-300">Name</span>
+                                <input
+                                    value={editForm.data.name}
+                                    onChange={(e) => editForm.setData('name', e.target.value)}
+                                    className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-200 dark:border-slate-700 dark:bg-slate-800 dark:text-white"
+                                />
+                                {editForm.errors.name && <span className="text-xs text-rose-500">{editForm.errors.name}</span>}
+                            </label>
+                            <label className="text-sm">
+                                <span className="block text-slate-600 dark:text-slate-300">Email</span>
+                                <input
+                                    type="email"
+                                    value={editForm.data.email}
+                                    onChange={(e) => editForm.setData('email', e.target.value)}
+                                    className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-200 dark:border-slate-700 dark:bg-slate-800 dark:text-white"
+                                />
+                                {editForm.errors.email && <span className="text-xs text-rose-500">{editForm.errors.email}</span>}
+                            </label>
+                            <label className="text-sm">
+                                <span className="block text-slate-600 dark:text-slate-300">Password (leave blank to keep)</span>
+                                <input
+                                    type="password"
+                                    value={editForm.data.password}
+                                    onChange={(e) => editForm.setData('password', e.target.value)}
+                                    className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-200 dark:border-slate-700 dark:bg-slate-800 dark:text-white"
+                                />
+                                {editForm.errors.password && <span className="text-xs text-rose-500">{editForm.errors.password}</span>}
+                            </label>
+                            <div className="grid gap-4 md:grid-cols-2">
+                                <label className="text-sm">
+                                    <span className="block text-slate-600 dark:text-slate-300">Role</span>
+                                    <select
+                                        value={editForm.data.role}
+                                        onChange={(e) => editForm.setData('role', e.target.value)}
+                                        className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-200 dark:border-slate-700 dark:bg-slate-800 dark:text-white"
+                                    >
+                                        {roles.map((option) => (
+                                            <option key={option.value} value={option.value}>
+                                                {option.label}
+                                            </option>
+                                        ))}
+                                    </select>
+                                </label>
+                                <label className="text-sm mt-6 md:mt-0 flex items-center gap-2">
+                                    <input
+                                        type="checkbox"
+                                        checked={!!editForm.data.is_active}
+                                        onChange={(e) => editForm.setData('is_active', e.target.checked)}
+                                    />
+                                    <span className="text-slate-600 dark:text-slate-300">Active</span>
+                                </label>
+                            </div>
+                            <div className="flex justify-end gap-2">
+                                <button
+                                    type="button"
+                                    onClick={() => setEditing(null)}
+                                    className="px-4 py-2 text-sm font-medium text-slate-600 dark:text-slate-300"
+                                >
+                                    Cancel
+                                </button>
+                                <button
+                                    type="submit"
+                                    disabled={editForm.processing}
+                                    className="inline-flex items-center rounded-md bg-indigo-600 px-4 py-2 text-sm font-medium text-white shadow-sm transition hover:bg-indigo-500 disabled:opacity-60"
+                                >
+                                    Save Changes
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            )}
                 </header>
+
+                <section className="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-sm">
+                    <div className="px-6 py-4 border-b border-slate-100 dark:border-slate-800">
+                        <h2 className="text-lg font-semibold text-slate-900 dark:text-slate-100">Quick Create User</h2>
+                    </div>
+                    <form
+                        onSubmit={(e) => {
+                            e.preventDefault();
+                            createForm.post('/admin/users', {
+                                preserveScroll: true,
+                                onSuccess: () => createForm.reset('name', 'email', 'password'),
+                            });
+                        }}
+                        className="px-6 py-4 grid gap-4"
+                    >
+                        <label className="text-sm">
+                            <span className="block text-slate-600 dark:text-slate-300">Name</span>
+                            <input
+                                required
+                                value={createForm.data.name}
+                                onChange={(e) => createForm.setData('name', e.target.value)}
+                                className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-200 dark:border-slate-700 dark:bg-slate-800 dark:text-white"
+                            />
+                            {createForm.errors.name && <span className="text-xs text-rose-500">{createForm.errors.name}</span>}
+                        </label>
+                        <label className="text-sm">
+                            <span className="block text-slate-600 dark:text-slate-300">Email</span>
+                            <input
+                                type="email"
+                                required
+                                value={createForm.data.email}
+                                onChange={(e) => createForm.setData('email', e.target.value)}
+                                className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-200 dark:border-slate-700 dark:bg-slate-800 dark:text-white"
+                            />
+                            {createForm.errors.email && <span className="text-xs text-rose-500">{createForm.errors.email}</span>}
+                        </label>
+                        <label className="text-sm">
+                            <span className="block text-slate-600 dark:text-slate-300">Password</span>
+                            <input
+                                type="password"
+                                required
+                                value={createForm.data.password}
+                                onChange={(e) => createForm.setData('password', e.target.value)}
+                                className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-200 dark:border-slate-700 dark:bg-slate-800 dark:text-white"
+                            />
+                            {createForm.errors.password && <span className="text-xs text-rose-500">{createForm.errors.password}</span>}
+                        </label>
+                        <div className="grid gap-4 md:grid-cols-2">
+                            <label className="text-sm">
+                                <span className="block text-slate-600 dark:text-slate-300">Role</span>
+                                <select
+                                    value={createForm.data.role}
+                                    onChange={(e) => createForm.setData('role', e.target.value)}
+                                    className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-200 dark:border-slate-700 dark:bg-slate-800 dark:text-white"
+                                >
+                                    {roles.map((option) => (
+                                        <option key={option.value} value={option.value}>
+                                            {option.label}
+                                        </option>
+                                    ))}
+                                </select>
+                            </label>
+                            <label className="text-sm mt-6 md:mt-0 flex items-center gap-2">
+                                <input
+                                    type="checkbox"
+                                    checked={!!createForm.data.is_active}
+                                    onChange={(e) => createForm.setData('is_active', e.target.checked)}
+                                />
+                                <span className="text-slate-600 dark:text-slate-300">Active</span>
+                            </label>
+                        </div>
+                        <div className="flex justify-end gap-2">
+                            <button
+                                type="button"
+                                onClick={() => createForm.reset('name', 'email', 'password')}
+                                className="px-4 py-2 text-sm font-medium text-slate-600 dark:text-slate-300"
+                            >
+                                Reset
+                            </button>
+                            <button
+                                type="submit"
+                                disabled={createForm.processing}
+                                className="inline-flex items-center rounded-md bg-indigo-600 px-4 py-2 text-sm font-medium text-white shadow-sm transition hover:bg-indigo-500 disabled:opacity-60"
+                            >
+                                Create User
+                            </button>
+                        </div>
+                    </form>
+                </section>
 
                 <div className="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-sm">
                     <div className="px-6 py-4 border-b border-slate-100 dark:border-slate-800">
@@ -233,6 +446,13 @@ function AdminUsers({ users, filters, roles }: UsersPageProps) {
                                         </td>
                                         <td className="px-6 py-4 text-right">
                                             <div className="flex justify-end gap-2">
+                                                <button
+                                                    type="button"
+                                                    onClick={() => openEdit(user)}
+                                                    className="inline-flex items-center gap-1 rounded-md border border-slate-200 dark:border-slate-700 px-3 py-1 text-xs font-medium text-slate-600 hover:bg-slate-100 dark:text-slate-200 dark:hover:bg-slate-800"
+                                                >
+                                                    Edit
+                                                </button>
                                                 <button
                                                     type="button"
                                                     onClick={() => handleActivationChange(user.id, !user.is_active)}

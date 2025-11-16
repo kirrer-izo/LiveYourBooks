@@ -6,6 +6,8 @@ use App\Http\Controllers\Controller;
 use App\Models\Book;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Auth;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -67,9 +69,45 @@ class AdminBookController extends Controller
             'is_featured' => ['nullable', 'boolean'],
         ]);
 
+        $data['user_id'] = Auth::id();
+        $data['is_completed'] = $data['is_completed'] ?? false;
+
         Book::create($data);
 
         return redirect()->back()->with('success', 'Book created.');
+    }
+
+    /**
+     * Bulk store multiple books at once.
+     */
+    public function bulkStore(Request $request): RedirectResponse
+    {
+        $validated = $request->validate([
+            'books' => ['required', 'array', 'min:1'],
+            'books.*.title' => ['required', 'string', 'max:255'],
+            'books.*.author' => ['nullable', 'string', 'max:255'],
+            'books.*.genre' => ['nullable', 'string', 'max:255'],
+            'books.*.life_area' => ['nullable', 'string', 'max:255'],
+        ]);
+
+        $books = $validated['books'];
+
+        $userId = Auth::id();
+        DB::transaction(function () use ($books, $userId) {
+            foreach ($books as $b) {
+                // Only keep known fillable fields
+                Book::create([
+                    'user_id' => $userId,
+                    'title' => $b['title'],
+                    'author' => $b['author'] ?? null,
+                    'genre' => $b['genre'] ?? null,
+                    'life_area' => $b['life_area'] ?? null,
+                    'is_completed' => false,
+                ]);
+            }
+        });
+
+        return redirect()->back()->with('success', 'Books created.');
     }
 
     /**
