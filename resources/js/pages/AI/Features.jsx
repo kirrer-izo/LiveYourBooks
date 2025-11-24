@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Head } from '@inertiajs/react';
+import { Head, usePage } from '@inertiajs/react';
 import Layout from '@/layouts/AppLayout';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -12,6 +12,8 @@ import { Badge } from '@/components/ui/badge';
 import DatePicker from '@/components/ui/date-picker';
 import FormattedMessage from '@/components/FormattedMessage';
 import { Clock, Brain, Calendar, Target, BookOpen, User, BookMarked, CheckSquare, Sparkles, Plus, Download, FileText } from 'lucide-react';
+import AIGuidanceDisclaimer from '@/components/AIGuidanceDisclaimer';
+import AiDisclaimerModal from '@/components/AiDisclaimerModal';
 
 export default function AIFeatures({ thinkers, books }) {
     const [activeTab, setActiveTab] = useState('summary');
@@ -45,7 +47,7 @@ export default function AIFeatures({ thinkers, books }) {
     const [error, setError] = useState(null);
     const [savingToJournal, setSavingToJournal] = useState(false);
     const [generatingTasks, setGeneratingTasks] = useState(false);
-    
+
     // Habit suggestions state
     const [habitData, setHabitData] = useState({
         bookId: '',
@@ -239,7 +241,7 @@ export default function AIFeatures({ thinkers, books }) {
 
     const handleSaveToJournal = async () => {
         if (!results.advice) return;
-        
+
         setSavingToJournal(true);
         setError(null);
         try {
@@ -272,7 +274,7 @@ export default function AIFeatures({ thinkers, books }) {
 
     const handleGenerateTasks = async () => {
         if (!results.advice) return;
-        
+
         setGeneratingTasks(true);
         setError(null);
         try {
@@ -653,13 +655,17 @@ ${insights.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')}
     return (
         <Layout>
             <Head title="AI Features" />
-            
+            <AiDisclaimerModal isOpen={!usePage().props.auth?.user?.ai_disclaimer_agreed_at} />
+
             <div className="container mx-auto px-4 py-8">
                 <div className="mb-8">
                     <h1 className="text-3xl font-bold text-gray-900">AI-Powered Features</h1>
                     <p className="text-gray-600 mt-2">
                         Leverage AI to enhance your personal growth journey with intelligent insights and recommendations.
                     </p>
+                    <div className="mt-2">
+                        <AIGuidanceDisclaimer />
+                    </div>
                 </div>
 
                 <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
@@ -705,9 +711,9 @@ ${insights.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')}
                                         />
                                     </div>
                                 </div>
-                                
-                                <Button 
-                                    onClick={handleGenerateSummary} 
+
+                                <Button
+                                    onClick={handleGenerateSummary}
                                     disabled={loading}
                                     className="w-full"
                                 >
@@ -719,7 +725,7 @@ ${insights.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')}
                                         {error}
                                     </div>
                                 )}
-                                
+
                                 {results.summary && (
                                     <div className="mt-6 space-y-4">
                                         <div className="flex items-center justify-between">
@@ -848,7 +854,7 @@ ${insights.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')}
                                             )}
                                         </div>
                                     </div>
-                                    
+
                                     <div>
                                         <Label htmlFor="book">Book (Optional)</Label>
                                         <div className="flex items-center gap-2">
@@ -969,9 +975,9 @@ ${insights.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')}
                                         </Button>
                                     </div>
                                 </div>
-                                
-                                <Button 
-                                    onClick={handleGenerateAdvice} 
+
+                                <Button
+                                    onClick={handleGenerateAdvice}
                                     disabled={loading}
                                     className="w-full"
                                 >
@@ -983,7 +989,7 @@ ${insights.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')}
                                         {error}
                                     </div>
                                 )}
-                                
+
                                 {results.advice && (
                                     <div className="mt-6 space-y-4">
                                         <h3 className="text-lg font-semibold">Your Personalized Advice</h3>
@@ -1103,7 +1109,7 @@ ${insights.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')}
                                             )}
                                         </div>
                                     </div>
-                                    
+
                                     <div>
                                         <Label htmlFor="habit-book">Book (Optional)</Label>
                                         <div className="flex items-center gap-2">
@@ -1224,9 +1230,9 @@ ${insights.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')}
                                         </Button>
                                     </div>
                                 </div>
-                                
-                                <Button 
-                                    onClick={handleGenerateHabitSuggestions} 
+
+                                <Button
+                                    onClick={handleGenerateHabitSuggestions}
                                     disabled={loading}
                                     className="w-full"
                                 >
@@ -1238,7 +1244,7 @@ ${insights.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')}
                                         {error}
                                     </div>
                                 )}
-                                
+
                                 {habitSuggestions.length > 0 && (
                                     <div className="mt-6 space-y-4">
                                         <h3 className="text-lg font-semibold">Suggested Habits</h3>
@@ -1295,7 +1301,7 @@ ${insights.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')}
                                             onChange={(e) => setRoutineData(prev => ({ ...prev, wakeUpTime: e.target.value }))}
                                         />
                                     </div>
-                                    
+
                                     <div>
                                         <Label htmlFor="sleepTime">Sleep Time</Label>
                                         <Input
@@ -1342,9 +1348,9 @@ ${insights.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')}
                                         </Button>
                                     </div>
                                 </div>
-                                
-                                <Button 
-                                    onClick={handleGenerateRoutine} 
+
+                                <Button
+                                    onClick={handleGenerateRoutine}
                                     disabled={loading}
                                     className="w-full"
                                 >
@@ -1356,7 +1362,7 @@ ${insights.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')}
                                         {error}
                                     </div>
                                 )}
-                                
+
                                 {results.routine && (
                                     <div className="mt-6 space-y-4">
                                         <h3 className="text-lg font-semibold">Your Daily Routine</h3>

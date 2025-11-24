@@ -92,6 +92,11 @@ class Habit extends Model
         $this->last_completed = now();
         $this->save();
 
+        // Create a completion record for analytics
+        $this->completions()->create([
+            'completed_at' => now(),
+        ]);
+
         // Notify user when certain streak milestones are achieved
         $milestones = [3, 7, 14, 30];
         if (in_array((int) $this->streak, $milestones, true) && $this->user) {

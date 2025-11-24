@@ -2,6 +2,7 @@ import React from "react";
 import { Head, usePage } from "@inertiajs/react";
 import AppLayout from "../../layouts/AppLayout";
 import FormattedMessage from "../../components/FormattedMessage";
+import AiDisclaimerModal from "../../components/AiDisclaimerModal";
 
 const Chat = () => {
   const [messages, setMessages] = React.useState([]);
@@ -97,8 +98,8 @@ const Chat = () => {
       }
 
       // Update local state
-      setConversations(prev => prev.map(c => 
-        c.id === conversationId 
+      setConversations(prev => prev.map(c =>
+        c.id === conversationId
           ? { ...c, title: editingTitle.trim() }
           : c
       ));
@@ -139,7 +140,7 @@ const Chat = () => {
 
       // Remove from local state
       setConversations(prev => prev.filter(c => c.id !== idToDelete));
-      
+
       // If deleted conversation was active, clear it
       if (conversationId === idToDelete) {
         setConversationId(null);
@@ -153,7 +154,7 @@ const Chat = () => {
   };
 
   const csrfToken = () => document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '';
-  
+
   const handleCreateBook = async (e) => {
     e.preventDefault();
     if (!newBookTitle.trim()) {
@@ -182,7 +183,7 @@ const Chat = () => {
       });
 
       const data = await res.json();
-      
+
       if (!res.ok) {
         throw new Error(data.error || 'Failed to create book');
       }
@@ -227,7 +228,7 @@ const Chat = () => {
       });
 
       const data = await res.json();
-      
+
       if (!res.ok) {
         throw new Error(data.error || 'Failed to create mentor');
       }
@@ -244,10 +245,10 @@ const Chat = () => {
       setCreatingMentor(false);
     }
   };
-  
+
   // Auto-scroll to bottom when messages change
   const messagesEndRef = React.useRef(null);
-  
+
   React.useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages, loading]);
@@ -304,6 +305,7 @@ const Chat = () => {
   return (
     <>
       <Head title="Mentor Chat - Live Your Books" />
+      <AiDisclaimerModal isOpen={!props.auth?.user?.ai_disclaimer_agreed_at} />
       <div className="space-y-4">
         <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Mentor Chat</h1>
 
@@ -321,9 +323,9 @@ const Chat = () => {
           <div className="flex flex-col">
             <label className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Book (optional)</label>
             <div className="flex gap-2">
-              <select 
-                value={bookId} 
-                onChange={(e) => setBookId(e.target.value)} 
+              <select
+                value={bookId}
+                onChange={(e) => setBookId(e.target.value)}
                 className="flex-1 border border-gray-300 dark:border-gray-600 rounded px-3 py-2 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
               >
                 <option value="">Select a book to discuss</option>
@@ -384,9 +386,9 @@ const Chat = () => {
           <div className="flex flex-col">
             <label className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Mentor (optional)</label>
             <div className="flex gap-2">
-              <select 
-                value={mentorName} 
-                onChange={(e) => setMentorName(e.target.value)} 
+              <select
+                value={mentorName}
+                onChange={(e) => setMentorName(e.target.value)}
                 className="flex-1 border border-gray-300 dark:border-gray-600 rounded px-3 py-2 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
               >
                 <option value="">Select a mentor</option>

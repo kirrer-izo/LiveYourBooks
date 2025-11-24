@@ -95,10 +95,22 @@ class BookUploadService
     {
         $extension = strtolower($file->getClientOriginalExtension());
         
-        if (!in_array($extension, self::ALLOWED_TYPES)) {
-            throw new \InvalidArgumentException(
-                'Invalid file type. Allowed types: ' . implode(', ', self::ALLOWED_TYPES)
-            );
+        $user = auth()->user();
+        $allowedTypes = self::ALLOWED_TYPES;
+
+        // Restrict non-admin users to text only
+        if ($user && $user->role !== \App\Enums\UserRole::Admin) {
+            $allowedTypes = ['txt'];
+        }
+        
+        if (!in_array($extension, $allowedTypes)) {
+            $message = 'Invalid file type. ';
+            if ($user && $user->role !== \App\Enums\UserRole::Admin) {
+                $message .= 'Free users can only upload .txt files.';
+            } else {
+                $message .= 'Allowed types: ' . implode(', ', self::ALLOWED_TYPES);
+            }
+            throw new \InvalidArgumentException($message);
         }
 
         if ($file->getSize() > self::MAX_FILE_SIZE) {

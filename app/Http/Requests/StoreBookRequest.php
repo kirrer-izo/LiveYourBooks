@@ -21,13 +21,16 @@ class StoreBookRequest extends FormRequest
      */
     public function rules(): array
     {
+        $isTextOnly = $this->input('is_text_only') === true || $this->input('is_text_only') === 'true';
+        
         return [
-            'title' => ['nullable', 'string', 'max:255'], // Optional when file is uploaded
-            'author' => ['nullable', 'string', 'max:255'],
+            'title' => $isTextOnly ? ['required', 'string', 'max:255'] : ['nullable', 'string', 'max:255'],
+            'author' => $isTextOnly ? ['required', 'string', 'max:255'] : ['nullable', 'string', 'max:255'],
             'genre' => ['nullable', 'string', 'in:Fiction,Non-fiction,Biography,Self-help,Philosophy,Spirituality,Science,History,Poetry,Business,Personal Development'],
             'life_area' => ['nullable', 'string', 'in:Health,Relationships,Career,Finance,Spirituality,Personal Growth,Emotional Wellbeing,Productivity,Mindfulness,Purpose'],
             'cover_img' => ['nullable', 'image', 'mimes:jpeg,png,jpg,gif', 'max:2048'],
-            'book_file' => ['required', 'file', 'mimes:pdf,epub,txt', 'max:51200'], // 50MB max
+            'book_file' => $isTextOnly ? ['nullable'] : ['required', 'file', 'mimes:pdf,epub,txt', 'max:51200'], // 50MB max
+            'is_text_only' => ['nullable', 'boolean'],
         ];
     }
 

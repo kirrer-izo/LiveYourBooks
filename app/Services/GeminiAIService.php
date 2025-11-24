@@ -8,6 +8,8 @@ use Illuminate\Support\Facades\Auth;
 use App\Models\User;
 use App\Models\Book;
 use App\Models\Message;
+use App\Models\Task;
+use App\Models\Habit;
 
 class GeminiAIService
 {
@@ -413,4 +415,90 @@ class GeminiAIService
         ];
     }
 
+    /**
+     * Generate book suggestions based on user's tasks and habits
+     */
+    public function generateBookSuggestions(User $user): array
+    {
+        // Fetch user's active tasks and habits
+        $tasks = Task::where('user_id', $user->id)
+            ->where('is_completed', false)
+            ->orderBy('created_at', 'desc')
+            ->limit(10)
+            ->pluck('title')
+            ->toArray();
+
+        $habits = Habit::where('user_id', $user->id)
+            ->where('is_active', true)
+            ->pluck('name')
+            ->toArray();
+
+        // Construct the prompt
+        $prompt = "Based on the following user context, suggest 5 books that would be helpful for them. \n\n";
+        
+        if (!empty($tasks)) {
+            $prompt .= "Current Tasks:\n- " . implode("\n- ", $tasks) . "\n\n";
+        }
+        
+        if (!empty($habits)) {
+            $prompt .= "Current Habits:\n- " . implode("\n- ", $habits) . "\n\n";
+        }
+        
+        $prompt .= "Please provide the suggestions in JSON format with the following structure for each book:\n";
+        $prompt .= "[{ \"title\": \"Book Title\", \"author\": \"Author Name\", \"reason\": \"Why this book is recommended based on their tasks/habits\" }]";
+
+        // Make API request
+        $url = "{$this->baseUrl}/models/{$this->model}:generateContent?key={$this->apiKey}";
+        
+        $response = Http::timeout(30)
+            ->withHeaders(['Content-Type' => 'application/json'])
+            ->post($url, [
+                'contents' => [
+                    [
+                        'parts' => [
+                            ['text' => $prompt]
+                        ]
+                    ]
+                ],
+                'generationConfig' => [
+                    'temperature' => 0.7,
+                    'maxOutputTokens' => 2048,
+                    'responseMimeType' => 'application/json',
+                ],
+            ]);
+
+        if (!$response->successful()) {
+            Log::error('Gemini API error for book suggestions', [
+                'status' => $response->status(),
+                'response' => $response->body(),
+                'user_id' => $user->id,
+            ]);
+            throw new \Exception('AI service error: ' . $response->status());
+        }
+
+        $data = $response->json();
+        
+        // Extract text
+        $reply = '';
+        if (!empty($data['candidates'][0]['content']['parts'][0]['text'])) {
+            $reply = $data['candidates'][0]['content']['parts'][0]['text'];
+        }
+
+        // Parse JSON response
+        try {
+            // Clean up potential markdown code blocks if present
+            $jsonStr = preg_replace('/^```json\s*|\s*```$/', '', trim($reply));
+            $suggestions = json_decode($jsonStr, true);
+            
+            if (!is_array($suggestions)) {
+                throw new \Exception('Invalid JSON format');
+            }
+            
+            return $suggestions;
+        } catch (\Exception $e) {
+            Log::error('Failed to parse book suggestions JSON', ['reply' => $reply, 'error' => $e->getMessage()]);
+            // Fallback or empty array
+            return [];
+        }
+    }
 }

@@ -1,4 +1,5 @@
 import React from "react";
+import AIGuidanceDisclaimer from "./AIGuidanceDisclaimer";
 
 const AIBookChat = ({ book, onClose, className = "" }) => {
   const [messages, setMessages] = React.useState([]);
@@ -12,7 +13,7 @@ const AIBookChat = ({ book, onClose, className = "" }) => {
   const send = async (e) => {
     e.preventDefault();
     if (!input.trim()) return;
-    
+
     const userMsg = { role: "user", content: input };
     setMessages((prev) => [...prev, userMsg]);
     setLoading(true);
@@ -35,7 +36,7 @@ const AIBookChat = ({ book, onClose, className = "" }) => {
           book_id: book?.id ? Number(book.id) : undefined,
         }),
       });
-      
+
       let data;
       try {
         data = await res.json();
@@ -43,12 +44,12 @@ const AIBookChat = ({ book, onClose, className = "" }) => {
         const txt = await res.text();
         throw new Error(txt || "AI service error");
       }
-      
+
       if (!res.ok) throw new Error(data?.error || "AI service error");
-      
+
       const newConvId = data.conversation_id ?? conversationId;
       setConversationId(newConvId);
-      
+
       setMessages((prev) => [...prev, { role: "assistant", content: data.reply }]);
       setInput("");
     } catch (err) {
@@ -115,6 +116,9 @@ const AIBookChat = ({ book, onClose, className = "" }) => {
                 Ask questions about "{book.title}" by {book.author}
               </p>
             )}
+            <div className="mt-1">
+              <AIGuidanceDisclaimer />
+            </div>
           </div>
           {onClose && (
             <button
@@ -144,27 +148,26 @@ const AIBookChat = ({ book, onClose, className = "" }) => {
           messages.map((m, i) => (
             <div key={i} className="space-y-1">
               <div className={m.role === "user" ? "text-right" : "text-left"}>
-                <div className={`inline-block px-3 py-2 rounded-lg max-w-xs lg:max-w-md ${
-                  m.role === "user" 
-                    ? "bg-indigo-600 text-white" 
-                    : "bg-gray-100 dark:bg-gray-700 text-gray-900 dark:text-white"
-                }`}>
+                <div className={`inline-block px-3 py-2 rounded-lg max-w-xs lg:max-w-md ${m.role === "user"
+                  ? "bg-indigo-600 text-white"
+                  : "bg-gray-100 dark:bg-gray-700 text-gray-900 dark:text-white"
+                  }`}>
                   <div className="whitespace-pre-wrap">{m.content}</div>
                 </div>
               </div>
               {m.role === 'assistant' && (
                 <div className="flex gap-2 text-xs text-gray-600 dark:text-gray-400 ml-1">
-                  <button 
-                    type="button" 
-                    className="underline hover:text-indigo-600 dark:hover:text-indigo-400" 
+                  <button
+                    type="button"
+                    className="underline hover:text-indigo-600 dark:hover:text-indigo-400"
                     onClick={() => saveToJournal(m.content)}
                   >
                     Save to Journal
                   </button>
                   <span>•</span>
-                  <button 
-                    type="button" 
-                    className="underline hover:text-indigo-600 dark:hover:text-indigo-400" 
+                  <button
+                    type="button"
+                    className="underline hover:text-indigo-600 dark:hover:text-indigo-400"
                     onClick={() => createTasksFromReply(m.content)}
                   >
                     Create Tasks
@@ -191,8 +194,8 @@ const AIBookChat = ({ book, onClose, className = "" }) => {
             onChange={(e) => setInput(e.target.value)}
             disabled={loading}
           />
-          <button 
-            disabled={loading || !input.trim()} 
+          <button
+            disabled={loading || !input.trim()}
             className="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 dark:bg-indigo-700 dark:hover:bg-indigo-800 text-white rounded-lg disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {loading ? "Sending..." : "Send"}

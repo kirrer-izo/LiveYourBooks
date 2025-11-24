@@ -198,6 +198,13 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::post('/ai/save-routine-template', [AIFeaturesController::class, 'saveRoutineTemplate'])->name('ai.save-routine-template');
     Route::post('/ai/generate-habit-suggestions', [AIFeaturesController::class, 'generateHabitSuggestions'])->name('ai.generate-habit-suggestions');
     Route::post('/ai/create-habit', [AIFeaturesController::class, 'createHabitFromSuggestion'])->name('ai.create-habit');
+    Route::post('/ai/book-suggestions', [AIFeaturesController::class, 'generateBookSuggestions'])->name('ai.book-suggestions');
+    
+    Route::post('/ai/disclaimer/agree', function () {
+        $user = auth()->user();
+        $user->update(['ai_disclaimer_agreed_at' => now()]);
+        return back()->with('success', 'AI Disclaimer agreed successfully.');
+    })->name('ai.disclaimer.agree');
 });
 
 Route::middleware(['auth', 'verified', 'role'])->prefix('admin')->name('admin.')->group(function () {

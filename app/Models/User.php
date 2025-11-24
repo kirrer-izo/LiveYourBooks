@@ -32,6 +32,7 @@ class User extends Authenticatable
         'role',
         'is_active',
         'notification_preferences',
+        'ai_disclaimer_agreed_at',
     ];
 
     /**
@@ -57,6 +58,7 @@ class User extends Authenticatable
             'notification_preferences' => 'array',
             'role' => UserRole::class,
             'is_active' => 'boolean',
+            'ai_disclaimer_agreed_at' => 'datetime',
         ];
     }
 

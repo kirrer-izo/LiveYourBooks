@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Book;
 use App\Models\Task;
 use App\Models\Habit;
+use App\Models\HabitCompletion;
 use App\Models\Journal;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -58,9 +59,10 @@ class AnalyticsController extends Controller
             ->pluck('count', 'date')
             ->toArray();
 
-        $habitCompletions = Habit::where('user_id', $userId)
-            ->whereBetween('last_completed', [$startDate->toDateString(), $endDate->toDateString()])
-            ->select(DB::raw('DATE(last_completed) as date'), DB::raw('COUNT(*) as count'))
+        $habitCompletions = HabitCompletion::join('habits', 'habit_completions.habit_id', '=', 'habits.id')
+            ->where('habits.user_id', $userId)
+            ->whereBetween('habit_completions.completed_at', [$startDate->toDateString(), $endDate->toDateString()])
+            ->select(DB::raw('DATE(habit_completions.completed_at) as date'), DB::raw('COUNT(*) as count'))
             ->groupBy('date')
             ->pluck('count', 'date')
             ->toArray();
@@ -79,7 +81,6 @@ class AnalyticsController extends Controller
 
         // Simple achievements
         $achievements = [
-            [ 'icon' => 'book', 'label' => 'Book Worm', 'desc' => 'Upload 5 books', 'unlocked' => $booksStats['total'] >= 5 ],
             [ 'icon' => 'zap', 'label' => '7-Day Streak', 'desc' => 'Consistent for a week', 'unlocked' => $habits->max('streak') >= 7 ],
             [ 'icon' => 'edit', 'label' => 'Reflective', 'desc' => '10 journal entries', 'unlocked' => Journal::where('user_id', $userId)->count() >= 10 ],
             [ 'icon' => 'check-circle', 'label' => 'Task Master', 'desc' => 'Completed 20 tasks', 'unlocked' => Task::where('user_id', $userId)->where('is_completed', true)->count() >= 20 ],

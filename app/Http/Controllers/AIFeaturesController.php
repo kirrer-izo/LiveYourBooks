@@ -772,4 +772,31 @@ class AIFeaturesController extends Controller
             'habit' => $habit,
         ]);
     }
+
+    /**
+     * Generate book suggestions based on user context
+     */
+    public function generateBookSuggestions(Request $request)
+    {
+        $user = auth()->user();
+        
+        try {
+            $suggestions = $this->geminiService->generateBookSuggestions($user);
+            
+            return response()->json([
+                'success' => true,
+                'suggestions' => $suggestions,
+            ]);
+        } catch (\Exception $e) {
+            Log::error('Failed to generate book suggestions', [
+                'error' => $e->getMessage(),
+                'user_id' => $user->id,
+            ]);
+            
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to generate book suggestions: ' . $e->getMessage(),
+            ], 500);
+        }
+    }
 }

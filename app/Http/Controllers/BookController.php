@@ -28,7 +28,28 @@ class BookController extends Controller
         $genres = array_map(fn ($c) => $c->value, Genre::cases());
         $lifeAreas = array_map(fn ($c) => $c->value, LifeArea::cases());
 
-        $query = Book::where('user_id', Auth::id());
+        $user = Auth::user();
+        $isFreeUser = !($user->subscription_status === 'active' || $user->role->value === 'Admin');
+
+        // Build query based on user subscription
+        if ($isFreeUser) {
+            // Free users see:
+            // 1. Their own text-only books (no file_path)
+            // 2. Any books with file uploads (from catalog or shared)
+            $query = Book::where(function ($q) use ($user) {
+                $q->where(function ($sub) use ($user) {
+                    // Own text-only books
+                    $sub->where('user_id', $user->id)
+                        ->whereNull('file_path');
+                })->orWhere(function ($sub) {
+                    // File-uploaded books
+                    $sub->whereNotNull('file_path');
+                });
+            });
+        } else {
+            // Premium users see all their books
+            $query = Book::where('user_id', Auth::id());
+        }
 
         if ($q) {
             $query->where(function ($sub) use ($q) {
