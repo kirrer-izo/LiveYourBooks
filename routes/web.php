@@ -181,10 +181,6 @@ Route::middleware(['auth', 'verified'])->group(function () {
     
     // Analytics page
     Route::get('/analytics', [AnalyticsController::class, 'index'])->name('analytics');
-    // Profile routes
-    Route::get('/profile', [\App\Http\Controllers\ProfileController::class, 'index'])->name('profile');
-    Route::post('/profile', [\App\Http\Controllers\ProfileController::class, 'update'])->name('profile.update');
-    Route::post('/profile/password', [\App\Http\Controllers\ProfileController::class, 'updatePassword'])->name('profile.password.update');
     
     // AI Features
     Route::get('/ai/features', [AIFeaturesController::class, 'index'])->name('ai.features');
