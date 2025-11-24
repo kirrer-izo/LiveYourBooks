@@ -105,7 +105,7 @@ class AIChatController extends Controller
                     $title = preg_replace('/^(?:[-*]\s+|\d+[\.)]\s+)/', '', $trim);
                     $title = trim($title);
                     if (strlen($title) > 0) {
-                        $tasks[] = Task::create([
+                        $task = Task::create([
                             'title' => mb_substr($title, 0, 120),
                             'description' => $title,
                             'is_completed' => false,
@@ -114,8 +114,19 @@ class AIChatController extends Controller
                             'priority' => 'medium',
                             'due_date' => now()->addWeeks(2), // Set due date 2 weeks from now
                         ]);
+                        $tasks[] = $task;
                     }
                 }
+            }
+
+            // Return JSON for API calls, redirect for web calls
+            if ($request->expectsJson()) {
+                return response()->json([
+                    'message' => 'Generated ' . count($tasks) . ' task suggestions successfully!',
+                    'tasks_created' => count($tasks),
+                    'suggestions' => $result['reply'],
+                    'tasks' => array_map(fn($t) => ['id' => $t->id, 'title' => $t->title], $tasks),
+                ]);
             }
 
             return redirect()->back()->with('success', 
@@ -124,6 +135,11 @@ class AIChatController extends Controller
 
         } catch (\Exception $e) {
             Log::error('Gemini AI task suggestion error', ['error' => $e->getMessage()]);
+            
+            if ($request->expectsJson()) {
+                return response()->json(['error' => 'Failed to generate task suggestions: ' . $e->getMessage()], 500);
+            }
+            
             return redirect()->back()->with('error', 
                 'Failed to generate task suggestions: ' . $e->getMessage()
             );
@@ -262,6 +278,11 @@ class AIChatController extends Controller
 
     public function chat(Request $request)
     {
+        // Check authentication first
+        if (!Auth::check()) {
+            return response()->json(['error' => 'Unauthorized'], 401);
+        }
+
         Log::info('mentor-chat endpoint hit');
         $request->validate([
             'message' => 'required|string',

@@ -81,13 +81,17 @@ test('user can create tasks from chat reply', function () {
 
 test('user can generate AI task suggestions from book', function () {
     // Mock the OpenAI API response
+    // Mock the Gemini API response
     Http::fake([
-        'api.openai.com/*' => Http::response([
-            'choices' => [
+        'generativelanguage.googleapis.com/*' => Http::response([
+            'candidates' => [
                 [
-                    'message' => [
-                        'content' => "1. Practice daily meditation for 10 minutes\n2. Write in gratitude journal\n3. Read one chapter per day\n4. Apply key concepts in daily life\n5. Share insights with others"
-                    ]
+                    'content' => [
+                        'parts' => [
+                            ['text' => "1. Practice daily meditation for 10 minutes\n2. Write in gratitude journal\n3. Read one chapter per day\n4. Apply key concepts in daily life\n5. Share insights with others"]
+                        ]
+                    ],
+                    'finishReason' => 'STOP'
                 ]
             ]
         ], 200)

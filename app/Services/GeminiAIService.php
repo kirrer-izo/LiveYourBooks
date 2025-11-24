@@ -15,7 +15,7 @@ class GeminiAIService
 {
     private string $apiKey;
     private string $baseUrl = 'https://generativelanguage.googleapis.com/v1beta';
-    private string $model = 'gemini-2.5-flash'; // Fast model that works with v1beta
+    private string $model = 'gemini-2.5-flash';
 
     public function __construct()
     {

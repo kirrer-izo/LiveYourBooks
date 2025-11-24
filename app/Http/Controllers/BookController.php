@@ -31,23 +31,18 @@ class BookController extends Controller
         $user = Auth::user();
         $isFreeUser = !($user->subscription_status === 'active' || $user->role->value === 'Admin');
 
-        // Build query based on user subscription
+
         if ($isFreeUser) {
-            // Free users see:
-            // 1. Their own text-only books (no file_path)
-            // 2. Any books with file uploads (from catalog or shared)
+            
             $query = Book::where(function ($q) use ($user) {
                 $q->where(function ($sub) use ($user) {
-                    // Own text-only books
                     $sub->where('user_id', $user->id)
                         ->whereNull('file_path');
                 })->orWhere(function ($sub) {
-                    // File-uploaded books
                     $sub->whereNotNull('file_path');
                 });
             });
         } else {
-            // Premium users see all their books
             $query = Book::where('user_id', Auth::id());
         }
 
@@ -75,7 +70,6 @@ class BookController extends Controller
         $books = $query->orderByDesc('created_at')->paginate(10)->withQueryString();
 
         $books->getCollection()->transform(function ($book) {
-            // Sanitize UTF-8 strings to prevent encoding errors
             if ($book->title) {
                 $book->title = $this->sanitizeUtf8($book->title);
             }
@@ -88,7 +82,6 @@ class BookController extends Controller
                 $ext = strtolower(pathinfo($book->cover_img, PATHINFO_EXTENSION));
                 $book->cover_url = $url;
                 $book->cover_is_pdf = ($ext === 'pdf');
-                // keep cover_img for backward compatibility, but point to URL
                 $book->cover_img = $url;
             } else {
                 $book->cover_url = null;
@@ -134,18 +127,15 @@ class BookController extends Controller
                 $validated['author'] = $this->sanitizeUtf8($validated['author']);
             }
             
-            // Handle cover image upload
             if ($request->hasFile('cover_img')) {
                 $coverFile = $request->file('cover_img');
                 $coverPath = $coverFile->store('book-covers', 'public');
                 $validated['cover_img'] = $coverPath;
             }
             
-            // Handle book file upload
             if ($request->hasFile('book_file')) {
                 $bookFile = $request->file('book_file');
                 
-                // Extract book info from PDF if title/author are missing
                 if (empty($validated['title']) || empty($validated['author'])) {
                     if ($bookFile->getClientOriginalExtension() === 'pdf') {
                         try {

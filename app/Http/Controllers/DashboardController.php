@@ -20,6 +20,8 @@ class DashboardController extends Controller
         // Basic stats
         $stats = [
             'total_books' => Book::where('user_id', $userId)->count(),
+            'books_completed' => Book::where('user_id', $userId)->where('is_completed', true)->count(),
+            'books_reading' => Book::where('user_id', $userId)->where('is_completed', false)->count(),
             'total_tasks' => Task::where('user_id', $userId)->count(),
             'tasks_completed' => Task::where('user_id', $userId)->where('is_completed', true)->count(),
             'tasks_pending' => Task::where('user_id', $userId)->where('is_completed', false)->count(),

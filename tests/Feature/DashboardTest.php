@@ -35,15 +35,20 @@ test('dashboard can be rendered', function () {
 
 test('dashboard displays correct statistics', function () {
     // Create test data
-    Book::factory()->count(3)->create(['user_id' => $this->user->id, 'progress' => 100]);
-    Book::factory()->count(2)->create(['user_id' => $this->user->id, 'progress' => 50]);
+    $completedBooks = Book::factory()->count(3)->create(['user_id' => $this->user->id, 'is_completed' => true]);
+    $readingBooks = Book::factory()->count(2)->create(['user_id' => $this->user->id, 'is_completed' => false]);
     
     Task::factory()->count(5)->create(['user_id' => $this->user->id, 'is_completed' => true]);
     Task::factory()->count(3)->create(['user_id' => $this->user->id, 'is_completed' => false]);
     
     Habit::factory()->count(4)->create(['user_id' => $this->user->id, 'is_active' => true]);
     Journal::factory()->count(6)->create(['user_id' => $this->user->id]);
-    Conversation::factory()->count(2)->create(['user_id' => $this->user->id]);
+    
+    // Reuse existing books for conversations to avoid creating new ones
+    Conversation::factory()->count(2)->create([
+        'user_id' => $this->user->id,
+        'book_id' => $completedBooks->first()->id
+    ]);
 
     $response = $this->actingAs($this->user)
         ->get('/dashboard');
@@ -129,8 +134,8 @@ test('dashboard calculates weekly progress data', function () {
     $response->assertStatus(200);
     $response->assertInertia(fn ($page) => $page
         ->has('weeklyData', 7) // Should have 7 days of data
-        ->where('weeklyData.6.tasks_completed', 1) // Yesterday should have 1 completed task
-        ->where('weeklyData.6.journal_entries', 1) // Yesterday should have 1 journal entry
+        ->where('weeklyData.5.tasks_completed', 1) // Index 5 is yesterday (6 days ago to today)
+        ->where('weeklyData.5.journal_entries', 1) // Index 5 is yesterday
     );
 });
 
