@@ -26,9 +26,8 @@ RUN composer install --no-interaction --prefer-dist --optimize-autoloader --no-s
 
 RUN npm install && npm run build
 
-RUN chown -R www-data:www-data /var/www/storage /var/www/bootstrap/cache
+RUN chown -R www-data:www-data /var/www
 RUN chmod -R 775 /var/www/storage /var/www/bootstrap/cache
-
 COPY docker/nginx.conf /etc/nginx/sites-available/default.conf
 RUN rm -f /etc/nginx/sites-enabled/default
 RUN ln -s /etc/nginx/sites-available/default.conf /etc/nginx/sites-enabled/default
