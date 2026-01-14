@@ -22,7 +22,7 @@ WORKDIR /var/www
 
 COPY . /var/www
 
-RUN composer install --no-interaction --prefer-dist --optimize-autoloader
+RUN composer install --no-interaction --prefer-dist --optimize-autoloader --no-scripts
 
 RUN npm install && npm run build
 
