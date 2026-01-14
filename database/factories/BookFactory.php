@@ -27,6 +27,7 @@ class BookFactory extends Factory
             'genre' => $this->faker->randomElement(array_map(fn($c) => $c->value, Genre::cases())),
             'life_area' => $this->faker->randomElement(array_map(fn($c) => $c->value, LifeArea::cases())),
             'cover_img' => fake()->imageUrl(200, 300, 'books', true, 'Faker'),
+            'progress' => 0,
             'is_completed' => fake()->boolean(20),
         ];
     }

@@ -21,6 +21,7 @@ class Journal extends Model
     protected $casts = [
         'tags' => 'array',
         'entry_date' => 'date',
+        'content' => 'encrypted',
     ];
 
     public function user()

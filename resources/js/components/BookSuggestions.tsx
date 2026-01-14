@@ -42,8 +42,9 @@ const BookSuggestions: React.FC<Props> = ({ className = '' }) => {
             }
 
             setSuggestions(data.suggestions || []);
-        } catch (err: any) {
-            setError(err.message || 'An unexpected error occurred');
+        } catch (err: unknown) {
+            const errorMessage = err instanceof Error ? err.message : 'An unexpected error occurred';
+            setError(errorMessage);
         } finally {
             setLoading(false);
         }

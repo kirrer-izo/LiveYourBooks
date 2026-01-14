@@ -21,7 +21,7 @@ function formatDateTime(value?: string | null) {
     if (!value) return 'Never';
     try {
         return new Date(value).toLocaleString();
-    } catch (error) {
+    } catch {
         return value;
     }
 }
@@ -70,8 +70,9 @@ function AdminIntegrations({ integrations = [] }: IntegrationsProps) {
                 throw new Error('Settings must be an object of key/value pairs.');
             }
             return parsed as Record<string, unknown>;
-        } catch (error: any) {
-            throw new Error(error?.message ?? 'Invalid JSON supplied.');
+        } catch (error: unknown) {
+            const msg = error instanceof Error ? error.message : 'Invalid JSON supplied.';
+            throw new Error(msg);
         }
     };
 
@@ -95,8 +96,9 @@ function AdminIntegrations({ integrations = [] }: IntegrationsProps) {
                     reset();
                 },
             });
-        } catch (error: any) {
-            setJsonError(error.message);
+        } catch (error: unknown) {
+            const msg = error instanceof Error ? error.message : 'An error occurred';
+            setJsonError(msg);
         }
     };
 
@@ -146,8 +148,9 @@ function AdminIntegrations({ integrations = [] }: IntegrationsProps) {
                     },
                 },
             );
-        } catch (error: any) {
-            setEditJsonError(error.message);
+        } catch (error: unknown) {
+            const msg = error instanceof Error ? error.message : 'An error occurred';
+            setEditJsonError(msg);
         }
     };
 
@@ -328,11 +331,10 @@ function AdminIntegrations({ integrations = [] }: IntegrationsProps) {
                                     <button
                                         type="button"
                                         onClick={() => toggleActive(integration)}
-                                        className={`rounded-md border px-3 py-1 text-xs font-medium transition ${
-                                            integration.is_active
-                                                ? 'border-emerald-400 bg-emerald-400/20 text-emerald-700 hover:bg-emerald-400/30 dark:border-emerald-500 dark:text-emerald-300 dark:hover:bg-emerald-500/20'
-                                                : 'border-slate-300 text-slate-600 hover:border-emerald-400 hover:text-emerald-500 dark:border-slate-600 dark:text-slate-300 dark:hover:border-emerald-400 dark:hover:text-emerald-300'
-                                        }`}
+                                        className={`rounded-md border px-3 py-1 text-xs font-medium transition ${integration.is_active
+                                            ? 'border-emerald-400 bg-emerald-400/20 text-emerald-700 hover:bg-emerald-400/30 dark:border-emerald-500 dark:text-emerald-300 dark:hover:bg-emerald-500/20'
+                                            : 'border-slate-300 text-slate-600 hover:border-emerald-400 hover:text-emerald-500 dark:border-slate-600 dark:text-slate-300 dark:hover:border-emerald-400 dark:hover:text-emerald-300'
+                                            }`}
                                     >
                                         {integration.is_active ? 'Disable' : 'Activate'}
                                     </button>

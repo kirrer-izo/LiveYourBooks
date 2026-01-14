@@ -3,29 +3,11 @@ import { Head, router, useForm } from '@inertiajs/react';
 import { BadgeCheck, CircleOff, Mail, Search, UserCog } from 'lucide-react';
 import { useEffect, useState, type ReactNode } from 'react';
 
-type RoleOption = {
-    value: string;
-    label: string;
-};
 
-type UserRow = {
-    id: number;
-    name: string;
-    email: string;
-    role: string;
-    role_label?: string;
-    is_active: boolean;
-    created_at?: string;
-};
 
-type PaginatedUsers = {
-    data: UserRow[];
-    links: Array<{
-        url: string | null;
-        label: string;
-        active: boolean;
-    }>;
-};
+
+
+
 
 // Deduplicated older implementation above; keeping the one below.
 
@@ -147,93 +129,93 @@ function AdminUsers({ users, filters, roles }: UsersPageProps) {
                         <p className="text-sm text-slate-500 dark:text-slate-400">Promote, deactivate, and oversee members across the platform.</p>
                     </div>
 
-            {editing && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
-                    <div className="w-full max-w-lg rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 shadow-xl">
-                        <div className="px-6 py-4 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between">
-                            <h3 className="text-lg font-semibold text-slate-900 dark:text-slate-100">Edit User</h3>
-                            <button
-                                type="button"
-                                onClick={() => setEditing(null)}
-                                className="text-sm text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200"
-                            >
-                                Close
-                            </button>
-                        </div>
-                        <form onSubmit={submitEdit} className="px-6 py-4 grid gap-4">
-                            <label className="text-sm">
-                                <span className="block text-slate-600 dark:text-slate-300">Name</span>
-                                <input
-                                    value={editForm.data.name}
-                                    onChange={(e) => editForm.setData('name', e.target.value)}
-                                    className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-200 dark:border-slate-700 dark:bg-slate-800 dark:text-white"
-                                />
-                                {editForm.errors.name && <span className="text-xs text-rose-500">{editForm.errors.name}</span>}
-                            </label>
-                            <label className="text-sm">
-                                <span className="block text-slate-600 dark:text-slate-300">Email</span>
-                                <input
-                                    type="email"
-                                    value={editForm.data.email}
-                                    onChange={(e) => editForm.setData('email', e.target.value)}
-                                    className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-200 dark:border-slate-700 dark:bg-slate-800 dark:text-white"
-                                />
-                                {editForm.errors.email && <span className="text-xs text-rose-500">{editForm.errors.email}</span>}
-                            </label>
-                            <label className="text-sm">
-                                <span className="block text-slate-600 dark:text-slate-300">Password (leave blank to keep)</span>
-                                <input
-                                    type="password"
-                                    value={editForm.data.password}
-                                    onChange={(e) => editForm.setData('password', e.target.value)}
-                                    className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-200 dark:border-slate-700 dark:bg-slate-800 dark:text-white"
-                                />
-                                {editForm.errors.password && <span className="text-xs text-rose-500">{editForm.errors.password}</span>}
-                            </label>
-                            <div className="grid gap-4 md:grid-cols-2">
-                                <label className="text-sm">
-                                    <span className="block text-slate-600 dark:text-slate-300">Role</span>
-                                    <select
-                                        value={editForm.data.role}
-                                        onChange={(e) => editForm.setData('role', e.target.value)}
-                                        className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-200 dark:border-slate-700 dark:bg-slate-800 dark:text-white"
+                    {editing && (
+                        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
+                            <div className="w-full max-w-lg rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 shadow-xl">
+                                <div className="px-6 py-4 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between">
+                                    <h3 className="text-lg font-semibold text-slate-900 dark:text-slate-100">Edit User</h3>
+                                    <button
+                                        type="button"
+                                        onClick={() => setEditing(null)}
+                                        className="text-sm text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200"
                                     >
-                                        {roles.map((option) => (
-                                            <option key={option.value} value={option.value}>
-                                                {option.label}
-                                            </option>
-                                        ))}
-                                    </select>
-                                </label>
-                                <label className="text-sm mt-6 md:mt-0 flex items-center gap-2">
-                                    <input
-                                        type="checkbox"
-                                        checked={!!editForm.data.is_active}
-                                        onChange={(e) => editForm.setData('is_active', e.target.checked)}
-                                    />
-                                    <span className="text-slate-600 dark:text-slate-300">Active</span>
-                                </label>
+                                        Close
+                                    </button>
+                                </div>
+                                <form onSubmit={submitEdit} className="px-6 py-4 grid gap-4">
+                                    <label className="text-sm">
+                                        <span className="block text-slate-600 dark:text-slate-300">Name</span>
+                                        <input
+                                            value={editForm.data.name}
+                                            onChange={(e) => editForm.setData('name', e.target.value)}
+                                            className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-200 dark:border-slate-700 dark:bg-slate-800 dark:text-white"
+                                        />
+                                        {editForm.errors.name && <span className="text-xs text-rose-500">{editForm.errors.name}</span>}
+                                    </label>
+                                    <label className="text-sm">
+                                        <span className="block text-slate-600 dark:text-slate-300">Email</span>
+                                        <input
+                                            type="email"
+                                            value={editForm.data.email}
+                                            onChange={(e) => editForm.setData('email', e.target.value)}
+                                            className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-200 dark:border-slate-700 dark:bg-slate-800 dark:text-white"
+                                        />
+                                        {editForm.errors.email && <span className="text-xs text-rose-500">{editForm.errors.email}</span>}
+                                    </label>
+                                    <label className="text-sm">
+                                        <span className="block text-slate-600 dark:text-slate-300">Password (leave blank to keep)</span>
+                                        <input
+                                            type="password"
+                                            value={editForm.data.password}
+                                            onChange={(e) => editForm.setData('password', e.target.value)}
+                                            className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-200 dark:border-slate-700 dark:bg-slate-800 dark:text-white"
+                                        />
+                                        {editForm.errors.password && <span className="text-xs text-rose-500">{editForm.errors.password}</span>}
+                                    </label>
+                                    <div className="grid gap-4 md:grid-cols-2">
+                                        <label className="text-sm">
+                                            <span className="block text-slate-600 dark:text-slate-300">Role</span>
+                                            <select
+                                                value={editForm.data.role}
+                                                onChange={(e) => editForm.setData('role', e.target.value)}
+                                                className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-200 dark:border-slate-700 dark:bg-slate-800 dark:text-white"
+                                            >
+                                                {roles.map((option) => (
+                                                    <option key={option.value} value={option.value}>
+                                                        {option.label}
+                                                    </option>
+                                                ))}
+                                            </select>
+                                        </label>
+                                        <label className="text-sm mt-6 md:mt-0 flex items-center gap-2">
+                                            <input
+                                                type="checkbox"
+                                                checked={!!editForm.data.is_active}
+                                                onChange={(e) => editForm.setData('is_active', e.target.checked)}
+                                            />
+                                            <span className="text-slate-600 dark:text-slate-300">Active</span>
+                                        </label>
+                                    </div>
+                                    <div className="flex justify-end gap-2">
+                                        <button
+                                            type="button"
+                                            onClick={() => setEditing(null)}
+                                            className="px-4 py-2 text-sm font-medium text-slate-600 dark:text-slate-300"
+                                        >
+                                            Cancel
+                                        </button>
+                                        <button
+                                            type="submit"
+                                            disabled={editForm.processing}
+                                            className="inline-flex items-center rounded-md bg-indigo-600 px-4 py-2 text-sm font-medium text-white shadow-sm transition hover:bg-indigo-500 disabled:opacity-60"
+                                        >
+                                            Save Changes
+                                        </button>
+                                    </div>
+                                </form>
                             </div>
-                            <div className="flex justify-end gap-2">
-                                <button
-                                    type="button"
-                                    onClick={() => setEditing(null)}
-                                    className="px-4 py-2 text-sm font-medium text-slate-600 dark:text-slate-300"
-                                >
-                                    Cancel
-                                </button>
-                                <button
-                                    type="submit"
-                                    disabled={editForm.processing}
-                                    className="inline-flex items-center rounded-md bg-indigo-600 px-4 py-2 text-sm font-medium text-white shadow-sm transition hover:bg-indigo-500 disabled:opacity-60"
-                                >
-                                    Save Changes
-                                </button>
-                            </div>
-                        </form>
-                    </div>
-                </div>
-            )}
+                        </div>
+                    )}
                 </header>
 
                 <section className="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-sm">
@@ -420,11 +402,10 @@ function AdminUsers({ users, filters, roles }: UsersPageProps) {
                                         </td>
                                         <td className="px-6 py-4">
                                             <span
-                                                className={`inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-semibold ${
-                                                    user.is_active
-                                                        ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300'
-                                                        : 'bg-rose-100 text-rose-700 dark:bg-rose-900/40 dark:text-rose-300'
-                                                }`}
+                                                className={`inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-semibold ${user.is_active
+                                                    ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300'
+                                                    : 'bg-rose-100 text-rose-700 dark:bg-rose-900/40 dark:text-rose-300'
+                                                    }`}
                                             >
                                                 {user.is_active ? (
                                                     <>
@@ -478,13 +459,12 @@ function AdminUsers({ users, filters, roles }: UsersPageProps) {
                                 <button
                                     key={`${link.label}-${index}`}
                                     type="button"
-                                    className={`px-3 py-1 rounded-md text-xs ${
-                                        link.active
-                                            ? 'bg-indigo-600 text-white'
-                                            : link.url
+                                    className={`px-3 py-1 rounded-md text-xs ${link.active
+                                        ? 'bg-indigo-600 text-white'
+                                        : link.url
                                             ? 'bg-white border border-slate-200 dark:bg-slate-900 dark:border-slate-700 text-slate-600 hover:bg-slate-100 dark:hover:bg-slate-800'
                                             : 'text-slate-400 cursor-not-allowed'
-                                    }`}
+                                        }`}
                                     onClick={() => link.url && router.visit(link.url, { preserveScroll: true })}
                                     disabled={!link.url}
                                     dangerouslySetInnerHTML={{ __html: link.label }}

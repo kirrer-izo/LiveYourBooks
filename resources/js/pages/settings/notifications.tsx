@@ -1,6 +1,6 @@
-import { Head, useForm, usePage } from '@inertiajs/react';
+import { Head, usePage } from '@inertiajs/react';
 import { useState, useEffect } from 'react';
-import { type BreadcrumbItem } from '@/types';
+
 import AppLayout from '../../layouts/AppLayout';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -8,7 +8,7 @@ import { Label } from '@/components/ui/label';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Bell, Clock } from 'lucide-react';
-import notifications from '@/routes/notifications';
+
 import { router } from '@inertiajs/react';
 
 interface NotificationPreferences {
@@ -40,7 +40,7 @@ interface Props {
 }
 
 export default function Notifications({ preferences: initialPreferences, timezones }: Props) {
-    const { flash } = usePage().props as any;
+    const { flash } = usePage().props as unknown as { flash: { success?: string; error?: string } };
     const [preferences, setPreferences] = useState<NotificationPreferences>(initialPreferences);
     const [saving, setSaving] = useState(false);
 
@@ -53,7 +53,7 @@ export default function Notifications({ preferences: initialPreferences, timezon
 
     const handleSave = async (e: React.FormEvent) => {
         e.preventDefault();
-        
+
         setSaving(true);
         router.post('/settings/notifications', preferences, {
             preserveScroll: true,
@@ -75,7 +75,7 @@ export default function Notifications({ preferences: initialPreferences, timezon
         const newDays = currentDays.includes(day)
             ? currentDays.filter(d => d !== day)
             : [...currentDays, day].sort();
-        
+
         setPreferences({
             ...preferences,
             [daysField]: newDays,
@@ -85,7 +85,7 @@ export default function Notifications({ preferences: initialPreferences, timezon
     return (
         <AppLayout>
             <Head title="Notification settings" />
-            
+
             <div className="container mx-auto px-4 py-8">
                 <div className="mb-8">
                     <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Notification Settings</h1>
