@@ -101,6 +101,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
             Route::get('/users', [AdminUserController::class, 'index'])->name('users.index');
             Route::post('/users', [AdminUserController::class, 'store'])->name('users.store');
             Route::put('/users/{user}', [AdminUserController::class, 'update'])->name('users.update');
+            Route::post('/users/{user}/toggle', [AdminUserController::class, 'toggle'])->name('users.toggle');
             Route::delete('/users/{user}', [AdminUserController::class, 'destroy'])->name('users.destroy');
 
             Route::resource('books', AdminBookController::class);
@@ -114,6 +115,11 @@ Route::middleware(['auth', 'verified'])->group(function () {
             Route::post('/integrations', [AdminIntegrationController::class, 'store'])->name('integrations.store');
             Route::put('/integrations/{integrationSetting}', [AdminIntegrationController::class, 'update'])->name('integrations.update');
             Route::delete('/integrations/{integrationSetting}', [AdminIntegrationController::class, 'destroy'])->name('integrations.destroy');
+
+            Route::get('/catalog', [AdminBookCatalogController::class, 'index'])->name('catalog.index');
+            Route::post('/catalog', [AdminBookCatalogController::class, 'store'])->name('catalog.store');
+            Route::put('/catalog/{entry}', [AdminBookCatalogController::class, 'update'])->name('catalog.update');
+            Route::delete('/catalog/{entry}', [AdminBookCatalogController::class, 'destroy'])->name('catalog.destroy');
         });
 
     // Resource routes
@@ -203,21 +209,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     })->name('ai.disclaimer.agree');
 });
 
-Route::middleware(['auth', 'verified', 'role'])->prefix('admin')->name('admin.')->group(function () {
-    Route::get('/', [AdminDashboardController::class, 'index'])->name('dashboard');
 
-    Route::get('/users', [AdminUserController::class, 'index'])->name('users.index');
-    Route::put('/users/{user}', [AdminUserController::class, 'update'])->name('users.update');
-    Route::post('/users/{user}/toggle', [AdminUserController::class, 'toggle'])->name('users.toggle');
-
-    Route::get('/catalog', [AdminBookCatalogController::class, 'index'])->name('catalog.index');
-    Route::post('/catalog', [AdminBookCatalogController::class, 'store'])->name('catalog.store');
-    Route::put('/catalog/{entry}', [AdminBookCatalogController::class, 'update'])->name('catalog.update');
-    Route::delete('/catalog/{entry}', [AdminBookCatalogController::class, 'destroy'])->name('catalog.destroy');
-
-    Route::get('/integrations', [AdminIntegrationController::class, 'index'])->name('integrations.index');
-    Route::put('/integrations/{integration}', [AdminIntegrationController::class, 'update'])->name('integrations.update');
-});
 
 
 require __DIR__.'/settings.php';
