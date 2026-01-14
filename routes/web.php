@@ -104,11 +104,11 @@ Route::middleware(['auth', 'verified'])->group(function () {
             Route::delete('/users/{user}', [AdminUserController::class, 'destroy'])->name('users.destroy');
 
             Route::resource('books', AdminBookController::class);
-            Route::get('/books', [AdminBookController::class, 'index'])->name('books.index');
-            Route::post('/books', [AdminBookController::class, 'store'])->name('books.store');
+            // Route::get('/books', [AdminBookController::class, 'index'])->name('books.index');
+            // Route::post('/books', [AdminBookController::class, 'store'])->name('books.store');
             Route::post('/books/bulk', [AdminBookController::class, 'bulkStore'])->name('books.bulk');
-            Route::put('/books/{book}', [AdminBookController::class, 'update'])->name('books.update');
-            Route::delete('/books/{book}', [AdminBookController::class, 'destroy'])->name('books.destroy');
+            // // Route::put('/books/{book}', [AdminBookController::class, 'update'])->name('books.update');
+            // Route::delete('/books/{book}', [AdminBookController::class, 'destroy'])->name('books.destroy');
 
             Route::get('/integrations', [AdminIntegrationController::class, 'index'])->name('integrations.index');
             Route::post('/integrations', [AdminIntegrationController::class, 'store'])->name('integrations.store');
