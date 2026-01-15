@@ -6,6 +6,7 @@ export default function Welcome() {
 
 
   return (
+
     <>
       <Head title="Welcome">
         <link rel="preconnect" href="https://fonts.bunny.net" />
