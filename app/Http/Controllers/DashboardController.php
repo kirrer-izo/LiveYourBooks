@@ -16,15 +16,30 @@ class DashboardController extends Controller
     public function index()
     {
         $userId = Auth::id();
+
+        $books_stats = Book::where('user_id', $userId)
+        ->selectRaw("
+        count(*) as total,
+        SUM(CASE WHEN is_completed = 1 THEN 1 ELSE 0 END) as completed,
+        SUM(CASE WHEN is_completed = 0 THEN 1 ELSE 0 END) as reading
+        ")->first();
+
+        $tasks_stats = Task::where('user_id', $userId)
+        ->selectRaw("
+        count(*) as total,
+        SUM(CASE WHEN is_completed = 1 THEN 1 ELSE 0 END) as completed,
+        SUM(CASE WHEN is_completed = 0 THEN 1 ELSE 0 END) as pending
+        ")->first();
+
         
         // Basic stats
         $stats = [
-            'total_books' => Book::where('user_id', $userId)->count(),
-            'books_completed' => Book::where('user_id', $userId)->where('is_completed', true)->count(),
-            'books_reading' => Book::where('user_id', $userId)->where('is_completed', false)->count(),
-            'total_tasks' => Task::where('user_id', $userId)->count(),
-            'tasks_completed' => Task::where('user_id', $userId)->where('is_completed', true)->count(),
-            'tasks_pending' => Task::where('user_id', $userId)->where('is_completed', false)->count(),
+            'total_books' => $books_stats->total ?? 0,
+            'books_completed' => $books_stats->completed ?? 0,
+            'books_reading' => $books_stats->reading ?? 0,
+            'total_tasks' => $tasks_stats->total ?? 0,
+            'tasks_completed' => $tasks_stats->completed ?? 0,
+            'tasks_pending' => $tasks_stats->pending ?? 0,
             'active_habits' => Habit::where('user_id', $userId)->where('is_active', true)->count(),
             'journal_entries' => Journal::where('user_id', $userId)->count(),
             'ai_conversations' => Conversation::where('user_id', $userId)->count(),
