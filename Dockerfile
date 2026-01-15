@@ -1,17 +1,19 @@
-# Stage 1: Build Assets (Node)
-FROM node:20-alpine AS assets
-WORKDIR /app
-COPY package*.json ./
-RUN npm install
-COPY . .
-RUN npm run build
-
-# Stage 2: Final Production Image (PHP)
 FROM php:8.3-fpm
 
-# Install system dependencies
+# Install system dependencies + Node.js
 RUN apt-get update && apt-get install -y \
-    git curl libpng-dev libonig-dev libxml2-dev zip unzip nginx
+    git \
+    curl \
+    libpng-dev \
+    libonig-dev \
+    libxml2-dev \
+    zip \
+    unzip \
+    nginx
+
+# Install Node.js (needed for Vite build)
+RUN curl -fsSL https://deb.nodesource.com/setup_20.x | bash - \
+    && apt-get install -y nodejs
 
 # Clear cache
 RUN apt-get clean && rm -rf /var/lib/apt/lists/*
@@ -27,11 +29,12 @@ WORKDIR /var/www
 # Copy application files
 COPY . /var/www
 
-# Copy built assets from Stage 1
-COPY --from=assets /app/public/build /var/www/public/build
-
 # Install PHP dependencies
-RUN composer install --no-interaction --prefer-dist --optimize-autoloader --no-dev
+RUN composer install --no-interaction --prefer-dist --optimize-autoloader
+
+# Install JS dependencies and Build Assets
+# This will now work because PHP is present in this image
+RUN npm install && npm run build
 
 # Set permissions
 RUN chown -R www-data:www-data /var/www \
