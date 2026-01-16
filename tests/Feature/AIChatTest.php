@@ -41,14 +41,22 @@ test('user can create journal from chat reply', function () {
             'title' => 'Test Journal Entry',
         ]);
 
+
     $response->assertStatus(200);
     $response->assertJsonStructure(['journal_id']);
 
     $this->assertDatabaseHas('journals', [
         'user_id' => $this->user->id,
         'title' => 'Test Journal Entry',
-        'content' => 'This is a test journal entry from AI chat.',
+        // 'content' is encrypted, so we can't check it directly in the DB
     ]);
+
+    $journal = Journal::where('user_id', $this->user->id)
+        ->where('title', 'Test Journal Entry')
+        ->first();
+
+    $this->assertNotNull($journal);
+    $this->assertEquals('This is a test journal entry from AI chat.', $journal->content);
 });
 
 test('user can create tasks from chat reply', function () {
