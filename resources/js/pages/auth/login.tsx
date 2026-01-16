@@ -1,10 +1,7 @@
 import AuthenticatedSessionController from '@/actions/App/Http/Controllers/Auth/AuthenticatedSessionController';
 import InputError from '@/components/input-error';
 import TextLink from '@/components/text-link';
-import { Button } from '@/components/ui/button';
-import { Checkbox } from '@/components/ui/checkbox';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
+
 import { register } from '@/routes';
 import { request } from '@/routes/password';
 import { Form, Head } from '@inertiajs/react';
@@ -23,7 +20,7 @@ export default function Login({ status, canResetPassword }: LoginProps) {
             <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900">
                 <div className="w-full max-w-md p-8 space-y-8 bg-white dark:bg-gray-800 rounded-lg shadow-md">
                     <Head title="Log in" />
-                    
+
                     <div className="text-center">
                         <h1 className="text-3xl font-bold text-indigo-700 dark:text-indigo-400">Live Your Books</h1>
                         <p className="mt-2 text-gray-600 dark:text-gray-300">Sign in to your account</p>
@@ -56,7 +53,7 @@ export default function Login({ status, canResetPassword }: LoginProps) {
                                         {errors.password && <InputError message={errors.password} className="mt-1" />}
                                     </div>
                                 </div>
-                                
+
                                 <div className="flex items-center justify-between">
                                     <div className="flex items-center">
                                         <input
@@ -73,7 +70,7 @@ export default function Login({ status, canResetPassword }: LoginProps) {
                                         </TextLink>
                                     )}
                                 </div>
-                                
+
                                 <div>
                                     <button
                                         type="submit"

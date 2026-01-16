@@ -1,0 +1,18 @@
+
+> lint
+> eslint . --fix
+
+
+C:\Users\kirrer\Desktop\Projects\Laravel\LiveYourBooks_clean\resources\js\pages\auth\login.tsx
+  4:10  error  'Button' is defined but never used    @typescript-eslint/no-unused-vars
+  5:10  error  'Checkbox' is defined but never used  @typescript-eslint/no-unused-vars
+  6:10  error  'Input' is defined but never used     @typescript-eslint/no-unused-vars
+  7:10  error  'Label' is defined but never used     @typescript-eslint/no-unused-vars
+
+C:\Users\kirrer\Desktop\Projects\Laravel\LiveYourBooks_clean\resources\js\pages\auth\register.tsx
+   9:10  error  'Input' is defined but never used       @typescript-eslint/no-unused-vars
+  10:10  error  'Label' is defined but never used       @typescript-eslint/no-unused-vars
+  11:8   error  'AuthLayout' is defined but never used  @typescript-eslint/no-unused-vars
+
+✖ 7 problems (7 errors, 0 warnings)
+
