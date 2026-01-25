@@ -7,6 +7,7 @@ use App\Models\User;
 use App\Enums\ThinkerType;
 use Illuminate\Database\Eloquent\Collection;
 
+
 class ThinkerRepository
 {
     public function getUserThinkers(User $user): Collection

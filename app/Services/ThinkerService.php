@@ -2,10 +2,10 @@
 
 namespace App\Services;
 
+use App\Enums\ThinkerType;
 use App\Models\Thinker;
 use App\Models\User;
-use App\Enums\ThinkerType;
-use Illuminate\Support\Facades\Auth;
+use App\Repositories\ThinkerRepository;
 
 class ThinkerService
 {
@@ -59,7 +59,7 @@ class ThinkerService
     public function toggleThinker(Thinker $thinker): Thinker
     {
         return $this->thinkerRepository->update($thinker, [
-            'is_active' => !$thinker->is_active
+            'is_active' => ! $thinker->is_active,
         ]);
     }
 

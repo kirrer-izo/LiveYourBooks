@@ -43,3 +43,11 @@ export interface User {
     is_active?: boolean;
     [key: string]: unknown; // This allows for additional properties...
 }
+
+export { };
+
+declare global {
+    interface Window {
+        axios: any;
+    }
+}

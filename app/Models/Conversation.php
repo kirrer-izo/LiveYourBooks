@@ -14,6 +14,7 @@ class Conversation extends Model
     protected $fillable = [
         'user_id',
         'mentor_id',
+        'thinker_id',
         'book_id',
         'title',
         'last_message_at',
@@ -31,6 +32,11 @@ class Conversation extends Model
     public function mentor(): BelongsTo
     {
         return $this->belongsTo(Mentor::class);
+    }
+
+    public function thinker(): BelongsTo
+    {
+        return $this->belongsTo(Thinker::class);
     }
 
     public function book(): BelongsTo

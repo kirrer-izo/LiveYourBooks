@@ -2,29 +2,37 @@
 
 namespace App\Http\Controllers;
 
-use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Facades\Auth;
-use App\Models\Conversation;
-use App\Models\Message;
 use App\Models\Book;
-use App\Models\Mentor;
+use App\Models\Conversation;
 use App\Models\Journal;
+use App\Models\Thinker; // Replaced Mentor
+use App\Models\Message;
 use App\Models\Task;
 use App\Services\GeminiAIService;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 
 class AIChatController extends Controller
 {
+    public function __construct()
+    {
+        $this->middleware('throttle:10,1');
+    }
+
     public function conversations(Request $request)
     {
         $userId = Auth::id();
-        if (!$userId) return response()->json(['error' => 'Unauthorized'], 401);
+        if (! $userId) {
+            return response()->json(['error' => 'Unauthorized'], 401);
+        }
         $items = Conversation::where('user_id', $userId)
             ->orderByDesc('last_message_at')
             ->orderByDesc('updated_at')
-            ->select('id','title','last_message_at','updated_at')
+            ->select('id', 'title', 'last_message_at', 'updated_at')
             ->get();
+
         return response()->json(['conversations' => $items]);
     }
 
@@ -47,6 +55,7 @@ class AIChatController extends Controller
             'tags' => ['mentor-chat'],
             'entry_date' => today(),
         ]);
+
         return response()->json(['journal_id' => $journal->id]);
     }
 
@@ -66,7 +75,9 @@ class AIChatController extends Controller
         $tasks = [];
         foreach ($lines as $line) {
             $trim = trim($line);
-            if ($trim === '') continue;
+            if ($trim === '') {
+                continue;
+            }
             if (preg_match('/^(?:[-*]\s+|\d+[\.)]\s+)/', $trim)) {
                 $title = preg_replace('/^(?:[-*]\s+|\d+[\.)]\s+)/', '', $trim);
                 $tasks[] = Task::create([
@@ -79,7 +90,8 @@ class AIChatController extends Controller
                 ]);
             }
         }
-        return response()->json(['created' => array_map(fn($t) => $t->id, $tasks)]);
+
+        return response()->json(['created' => array_map(fn ($t) => $t->id, $tasks)]);
     }
 
     public function generateTaskSuggestions(Request $request)
@@ -89,18 +101,20 @@ class AIChatController extends Controller
         ]);
 
         try {
-            $geminiService = new GeminiAIService();
+            $geminiService = new GeminiAIService;
             $result = $geminiService->generateTaskSuggestions($request->input('book_id'));
-            
+
             // Parse the suggestions and create tasks
             $lines = preg_split('/\r?\n/', $result['reply']);
             $tasks = [];
             $userId = Auth::id();
             $book = Book::where('user_id', $userId)->findOrFail($request->input('book_id'));
-            
+
             foreach ($lines as $line) {
                 $trim = trim($line);
-                if ($trim === '') continue;
+                if ($trim === '') {
+                    continue;
+                }
                 if (preg_match('/^(?:[-*]\s+|\d+[\.)]\s+)/', $trim)) {
                     $title = preg_replace('/^(?:[-*]\s+|\d+[\.)]\s+)/', '', $trim);
                     $title = trim($title);
@@ -122,26 +136,26 @@ class AIChatController extends Controller
             // Return JSON for API calls, redirect for web calls
             if ($request->expectsJson()) {
                 return response()->json([
-                    'message' => 'Generated ' . count($tasks) . ' task suggestions successfully!',
+                    'message' => 'Generated '.count($tasks).' task suggestions successfully!',
                     'tasks_created' => count($tasks),
                     'suggestions' => $result['reply'],
-                    'tasks' => array_map(fn($t) => ['id' => $t->id, 'title' => $t->title], $tasks),
+                    'tasks' => array_map(fn ($t) => ['id' => $t->id, 'title' => $t->title], $tasks),
                 ]);
             }
 
-            return redirect()->back()->with('success', 
-                'Generated ' . count($tasks) . ' task suggestions successfully! Check your Tasks page to see them.'
+            return redirect()->back()->with('success',
+                'Generated '.count($tasks).' task suggestions successfully! Check your Tasks page to see them.'
             );
 
         } catch (\Exception $e) {
             Log::error('Gemini AI task suggestion error', ['error' => $e->getMessage()]);
-            
+
             if ($request->expectsJson()) {
-                return response()->json(['error' => 'Failed to generate task suggestions: ' . $e->getMessage()], 500);
+                return response()->json(['error' => 'Failed to generate task suggestions: '.$e->getMessage()], 500);
             }
-            
-            return redirect()->back()->with('error', 
-                'Failed to generate task suggestions: ' . $e->getMessage()
+
+            return redirect()->back()->with('error',
+                'Failed to generate task suggestions: '.$e->getMessage()
             );
         }
     }
@@ -149,9 +163,12 @@ class AIChatController extends Controller
     public function conversation(Request $request, int $id)
     {
         $userId = Auth::id();
-        if (!$userId) return response()->json(['error' => 'Unauthorized'], 401);
+        if (! $userId) {
+            return response()->json(['error' => 'Unauthorized'], 401);
+        }
         $conv = Conversation::where('user_id', $userId)->findOrFail($id);
-        $messages = $conv->messages()->orderBy('created_at')->get(['role','content','created_at']);
+        $messages = $conv->messages()->orderBy('created_at')->get(['role', 'content', 'created_at']);
+
         return response()->json([
             'conversation' => ['id' => $conv->id, 'title' => $conv->title, 'last_message_at' => $conv->last_message_at],
             'messages' => $messages,
@@ -166,15 +183,17 @@ class AIChatController extends Controller
         $request->validate([
             'title' => 'required|string|max:255',
         ]);
-        
+
         $userId = Auth::id();
-        if (!$userId) return response()->json(['error' => 'Unauthorized'], 401);
-        
+        if (! $userId) {
+            return response()->json(['error' => 'Unauthorized'], 401);
+        }
+
         $conv = Conversation::where('user_id', $userId)->findOrFail($id);
         $conv->update([
             'title' => $request->input('title'),
         ]);
-        
+
         return response()->json([
             'message' => 'Conversation updated successfully',
             'conversation' => $conv,
@@ -187,16 +206,18 @@ class AIChatController extends Controller
     public function deleteConversation(int $id)
     {
         $userId = Auth::id();
-        if (!$userId) return response()->json(['error' => 'Unauthorized'], 401);
-        
+        if (! $userId) {
+            return response()->json(['error' => 'Unauthorized'], 401);
+        }
+
         $conv = Conversation::where('user_id', $userId)->findOrFail($id);
-        
+
         // Delete all messages first
         $conv->messages()->delete();
-        
+
         // Delete the conversation
         $conv->delete();
-        
+
         return response()->json([
             'message' => 'Conversation deleted successfully',
         ]);
@@ -213,7 +234,7 @@ class AIChatController extends Controller
         ]);
 
         $userId = Auth::id();
-        if (!$userId) {
+        if (! $userId) {
             return response()->json(['error' => 'Unauthorized'], 401);
         }
 
@@ -234,7 +255,8 @@ class AIChatController extends Controller
             ]);
         } catch (\Exception $e) {
             Log::error('Quick create book error', ['error' => $e->getMessage()]);
-            return response()->json(['error' => 'Failed to create book: ' . $e->getMessage()], 500);
+
+            return response()->json(['error' => 'Failed to create book: '.$e->getMessage()], 500);
         }
     }
 
@@ -250,7 +272,7 @@ class AIChatController extends Controller
         ]);
 
         $userId = Auth::id();
-        if (!$userId) {
+        if (! $userId) {
             return response()->json(['error' => 'Unauthorized'], 401);
         }
 
@@ -272,14 +294,15 @@ class AIChatController extends Controller
             ]);
         } catch (\Exception $e) {
             Log::error('Quick create mentor error', ['error' => $e->getMessage()]);
-            return response()->json(['error' => 'Failed to create mentor: ' . $e->getMessage()], 500);
+
+            return response()->json(['error' => 'Failed to create mentor: '.$e->getMessage()], 500);
         }
     }
 
     public function chat(Request $request)
     {
         // Check authentication first
-        if (!Auth::check()) {
+        if (! Auth::check()) {
             return response()->json(['error' => 'Unauthorized'], 401);
         }
 
@@ -288,13 +311,12 @@ class AIChatController extends Controller
             'message' => 'required|string',
             'conversation_id' => 'nullable|integer|exists:conversations,id',
             'book_id' => 'nullable|integer|exists:books,id',
-            'mentor_id' => 'nullable|integer|exists:mentors,id',
-            'book' => 'nullable|string', // legacy string support
-            'mentor' => 'nullable|string', // legacy string support
+            'mentor_id' => 'nullable', // Allowed to be string for custom logic or int for Thinker
+            'mentor' => 'nullable|string', // Name string
         ]);
 
         $prompt = (string) $request->input('message');
-        $bookName = (string) $request->input('book', '');
+        $bookName = (string) $request->input('book', ''); // legacy support
         $mentorName = (string) $request->input('mentor', '');
         $bookId = $request->input('book_id');
         $mentorId = $request->input('mentor_id');
@@ -304,11 +326,21 @@ class AIChatController extends Controller
             // Resolve book/mentor display names if IDs are provided
             if ($bookId) {
                 $book = Book::where('user_id', Auth::id())->find($bookId);
-                if ($book) { $bookName = $book->title; }
+                if ($book) {
+                    $bookName = $book->title;
+                }
             }
-            if ($mentorId) {
-                $mentor = Mentor::find($mentorId);
-                if ($mentor) { $mentorName = $mentor->name ?? $mentorName; }
+            
+            // Logic to find Thinker if mentor_id is numeric
+            // If it's a string (like 'author_xx'), we rely on $mentorName passed in or parse it if needed
+            if ($mentorId && is_numeric($mentorId)) {
+                $thinker = Thinker::where('user_id', Auth::id())
+                    ->orWhere('user_id', null) // Handle global thinkers if any? usually predefined don't have IDs in DB unless synced
+                    ->find($mentorId);
+                
+                if ($thinker) {
+                    $mentorName = $thinker->name;
+                }
             }
 
             // Find or create conversation
@@ -317,9 +349,13 @@ class AIChatController extends Controller
                 $conversation = Conversation::where('user_id', Auth::id())->findOrFail($conversationId);
             } else {
                 $title = $mentorName ?: ($bookName ?: mb_substr($prompt, 0, 50));
+                
+                // Only store mentor_id if it's a valid integer ID
+                $dbMentorId = (is_numeric($mentorId)) ? $mentorId : null;
+                
                 $conversation = Conversation::create([
                     'user_id' => Auth::id(),
-                    'mentor_id' => $mentorId,
+                    'thinker_id' => $dbMentorId,
                     'book_id' => $bookId,
                     'title' => $title,
                     'last_message_at' => now(),
@@ -334,7 +370,8 @@ class AIChatController extends Controller
             ]);
 
             // Use Gemini AI service
-            $geminiService = new GeminiAIService();
+            $geminiService = new GeminiAIService;
+            // Pass the resolved mentorName to the service
             $result = $geminiService->generateBookResponse($prompt, $bookId, $conversation->id, null, $mentorName);
 
             // Save assistant reply
@@ -350,8 +387,16 @@ class AIChatController extends Controller
                 'conversation_id' => $conversation->id,
             ]);
 
+        } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
+            Log::warning('Chat: Conversation not found', ['conversation_id' => $conversationId, 'user_id' => Auth::id()]);
+            return response()->json(['error' => 'Conversation not found or access denied.'], 404);
         } catch (\Exception $e) {
-            Log::error('AI chat error', ['error' => $e->getMessage()]);
+            Log::error('AI chat error', [
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+                'user_id' => Auth::id()
+            ]);
+
             return response()->json(['error' => 'AI service error: ' . $e->getMessage()], 500);
         }
     }

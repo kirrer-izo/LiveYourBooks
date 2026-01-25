@@ -169,3 +169,69 @@ test('user can view conversation history', function () {
         ]
     ]);
 });
+
+test('user can chat with a custom mentor (thinker)', function () {
+    $thinker = \App\Models\Thinker::factory()->create([
+        'user_id' => $this->user->id,
+        'type' => \App\Enums\ThinkerType::CUSTOM,
+        'name' => 'Custom Mentor',
+        'is_active' => true,
+    ]);
+
+    Http::fake([
+        'generativelanguage.googleapis.com/*' => Http::response([
+            'candidates' => [
+                [
+                    'content' => ['parts' => [['text' => 'Hello from Custom Mentor!']]],
+                    'finishReason' => 'STOP'
+                ]
+            ]
+        ], 200)
+    ]);
+
+    $response = $this->actingAs($this->user)
+        ->postJson('/api/mentor-chat', [
+            'message' => 'Hello',
+            'mentor_id' => $thinker->id,
+            'mentor' => $thinker->name,
+        ]);
+
+    $response->assertStatus(200);
+    $response->assertJsonStructure(['reply', 'conversation_id']);
+    
+    $this->assertDatabaseHas('conversations', [
+        'user_id' => $this->user->id,
+        'thinker_id' => $thinker->id,
+        'title' => 'Custom Mentor',
+    ]);
+});
+
+test('user can chat with an author', function () {
+    Http::fake([
+        'generativelanguage.googleapis.com/*' => Http::response([
+            'candidates' => [
+                [
+                    'content' => ['parts' => [['text' => 'Hello from J.K. Rowling!']]],
+                    'finishReason' => 'STOP'
+                ]
+            ]
+        ], 200)
+    ]);
+
+    $response = $this->actingAs($this->user)
+        ->postJson('/api/mentor-chat', [
+            'message' => 'Hello',
+            'mentor_id' => 'author_hash', // String ID
+            'mentor' => 'J.K. Rowling',
+        ]);
+
+    $response->assertStatus(200);
+    $response->assertJsonStructure(['reply', 'conversation_id']);
+    
+    // For author, mentor_id in DB should be null
+    $this->assertDatabaseHas('conversations', [
+        'user_id' => $this->user->id,
+        'mentor_id' => null,
+        'title' => 'J.K. Rowling',
+    ]);
+});
