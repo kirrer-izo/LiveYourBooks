@@ -80,10 +80,7 @@ class TaskController extends Controller
                       ->withQueryString();
         
         // Get filter options
-        $books = Book::where('user_id', Auth::id())
-                    ->select('id', 'title', 'author')
-                    ->orderBy('title')
-                    ->get();
+        $books = $this->getUserBooks();
         
         return inertia('Tasks/Index', [
             'tasks' => $tasks,
@@ -145,10 +142,7 @@ class TaskController extends Controller
             abort(403);
         }
         
-        $books = Book::where('user_id', Auth::id())
-                    ->select('id', 'title', 'author')
-                    ->orderBy('title')
-                    ->get();
+        $books = $this->getUserBooks();
         
         $habits = Habit::where('user_id', Auth::id())
                       ->where('is_active', true)
@@ -200,6 +194,17 @@ class TaskController extends Controller
         
         return redirect()->route('tasks.index')
             ->with('success', 'Task deleted successfully!');
+    }
+
+    /**
+     * Get the authenticated user's books for use in dropdowns.
+     */
+    private function getUserBooks()
+    {
+        return Book::where('user_id', Auth::id())
+            ->select('id', 'title', 'author')
+            ->orderBy('title')
+            ->get();
     }
 
     /**

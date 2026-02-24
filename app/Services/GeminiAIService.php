@@ -51,7 +51,7 @@ class GeminiAIService
                 ->limit(10)
                 ->get()
                 ->reverse();
-            
+
             if ($messages->count() > 0) {
                 $history = '';
                 foreach ($messages as $msg) {
@@ -78,161 +78,16 @@ class GeminiAIService
         // Combine system prompt, book context, conversation history, and user message
         $fullMessage = $systemPrompt . $message . $bookContext . $conversationHistory;
 
-        // Make API request
-        $url = "{$this->baseUrl}/models/{$this->model}:generateContent?key={$this->apiKey}";
-        
-        $response = Http::timeout(30)
-            ->withHeaders(['Content-Type' => 'application/json'])
-            ->post($url, [
-                'contents' => [
-                    [
-                        'parts' => [
-                            ['text' => $fullMessage]
-                        ]
-                    ]
-                ],
-                'generationConfig' => [
-                    'temperature' => 0.7,
-                    'maxOutputTokens' => 2048,
-                ],
-                'safetySettings' => [
-                    [
-                        'category' => 'HARM_CATEGORY_HARASSMENT',
-                        'threshold' => 'BLOCK_NONE'
-                    ],
-                    [
-                        'category' => 'HARM_CATEGORY_HATE_SPEECH',
-                        'threshold' => 'BLOCK_NONE'
-                    ],
-                    [
-                        'category' => 'HARM_CATEGORY_SEXUALLY_EXPLICIT',
-                        'threshold' => 'BLOCK_NONE'
-                    ],
-                    [
-                        'category' => 'HARM_CATEGORY_DANGEROUS_CONTENT',
-                        'threshold' => 'BLOCK_NONE'
-                    ]
-                ]
-            ]);
+        $data = $this->callGeminiApi($fullMessage, [], ['user_id' => $user->id]);
 
-            if (!$response->successful()) {
-            Log::error('Gemini API error', [
-                'status' => $response->status(),
-                'response' => $response->body(),
-                'user_id' => $user->id,
-            ]);
-            
-            throw new \Exception('AI service error: ' . $response->status() . ' - ' . $response->body());
-            }
-
-            $data = $response->json();
-        
-        // Log full response for debugging
         Log::info('Gemini API response', ['response' => $data]);
-        
-        // Check if response has candidates
-        if (!isset($data['candidates']) || empty($data['candidates'])) {
-            Log::error('Gemini API empty candidates', [
-                'response' => $data,
-                'user_id' => $user->id,
-            ]);
-            throw new \Exception('AI service returned no response. Please try again.');
-        }
-        
-        $candidate = $data['candidates'][0] ?? null;
-        if (!$candidate) {
-            Log::error('Gemini API no candidate in response', [
-                'response' => $data,
-                'user_id' => $user->id,
-            ]);
-            throw new \Exception('AI service returned no response. Please try again.');
-        }
-        
-        // Log raw candidate structure for debugging
-        Log::debug('Gemini API candidate structure', [
-            'candidate' => $candidate,
-            'user_id' => $user->id,
-        ]);
-        
-            // Check finish reason - handle different cases
-            $finishReason = $candidate['finishReason'] ?? null;
-            if ($finishReason && $finishReason !== 'STOP') {
-                if ($finishReason === 'SAFETY') {
-                    Log::warning('Gemini API response blocked by safety filters', [
-                        'finish_reason' => $finishReason,
-                        'user_id' => $user->id,
-                    ]);
-                    throw new \Exception('AI response was blocked by safety filters. Please try rephrasing your request.');
-                } elseif ($finishReason === 'MAX_TOKENS') {
-                    Log::warning('Gemini API response hit token limit', [
-                        'finish_reason' => $finishReason,
-                        'user_id' => $user->id,
-                    ]);
-                    // Still try to use the partial response if available
-                    // Don't throw yet, check if there's content first
-                } else {
-                    Log::warning('Gemini API response ended with non-STOP reason', [
-                        'finish_reason' => $finishReason,
-                        'user_id' => $user->id,
-                    ]);
-                    // For other reasons, try to use the response anyway
-                }
-            }
-        
-        // Try to extract text from response - check multiple possible locations
-        $reply = '';
-        
-        // Path 1: Standard structure - content.parts[0].text
-        if (!empty($candidate['content']['parts'][0]['text'])) {
-            $reply = $candidate['content']['parts'][0]['text'];
-        }
-        // Path 2: Alternative structure - content.parts[0] as string
-        elseif (!empty($candidate['content']['parts'][0]) && is_string($candidate['content']['parts'][0])) {
-            $reply = $candidate['content']['parts'][0];
-        }
-        // Path 3: Direct output field
-        elseif (!empty($candidate['output'])) {
-            $reply = $candidate['output'];
-        }
-        // Path 4: content.parts[0] as object with text property
-        elseif (!empty($candidate['content']['parts'][0])) {
-            $part = $candidate['content']['parts'][0];
-            if (is_array($part) && isset($part['text'])) {
-                $reply = $part['text'];
-            }
-        }
-        // Path 5: content.text (direct text field)
-        elseif (!empty($candidate['content']['text'])) {
-            $reply = $candidate['content']['text'];
-        }
-        // Path 6: text field at root level
-        elseif (!empty($candidate['text'])) {
-            $reply = $candidate['text'];
-        }
 
-            // If still empty, check if it's due to MAX_TOKENS and provide a helpful message
-            if (empty($reply)) {
-                if ($finishReason === 'MAX_TOKENS') {
-                    Log::error('Gemini API empty reply due to token limit', [
-                        'candidate' => $candidate,
-                        'response' => $data,
-                        'user_id' => $user->id,
-                    ]);
-                    throw new \Exception('AI response exceeded token limit. The prompt may be too long. Please try simplifying your request.');
-                } else {
-                    Log::error('Gemini API empty reply - could not extract text from any known path', [
-                        'candidate' => $candidate,
-                        'response' => $data,
-                        'user_id' => $user->id,
-                    ]);
-                    throw new \Exception('AI service returned empty response. Please try again.');
-                }
-            }
+        $reply = $this->extractTextFromResponse($data, ['user_id' => $user->id]);
 
-            return [
-                'reply' => $reply,
-                'conversation_id' => $conversationId,
-            ];
+        return [
+            'reply' => $reply,
+            'conversation_id' => $conversationId,
+        ];
     }
 
     /**
@@ -254,155 +109,21 @@ class GeminiAIService
         }
         $prompt .= ", suggest 5-7 simple, everyday tasks a reader could do. Keep them safe, practical, and positive. Format as a numbered list.";
 
-        // Make API request
-        $url = "{$this->baseUrl}/models/{$this->model}:generateContent?key={$this->apiKey}";
-        
-        $response = Http::timeout(30)
-            ->withHeaders(['Content-Type' => 'application/json'])
-            ->post($url, [
-                'contents' => [
-                    [
-                        'parts' => [
-                            ['text' => $prompt]
-                        ]
-                    ]
-                ],
-                'generationConfig' => [
-                    'temperature' => 0.7,
-                    'maxOutputTokens' => 2048,
-                ],
-                'safetySettings' => [
-                    [
-                        'category' => 'HARM_CATEGORY_HARASSMENT',
-                        'threshold' => 'BLOCK_NONE'
-                    ],
-                    [
-                        'category' => 'HARM_CATEGORY_HATE_SPEECH',
-                        'threshold' => 'BLOCK_NONE'
-                    ],
-                    [
-                        'category' => 'HARM_CATEGORY_SEXUALLY_EXPLICIT',
-                        'threshold' => 'BLOCK_NONE'
-                    ],
-                    [
-                        'category' => 'HARM_CATEGORY_DANGEROUS_CONTENT',
-                        'threshold' => 'BLOCK_NONE'
-                    ]
-                ]
-            ]);
+        $context = ['user_id' => $user->id, 'book_id' => $bookId];
 
-            if (!$response->successful()) {
-            Log::error('Gemini API error', [
-                'status' => $response->status(),
-                'response' => $response->body(),
-                'user_id' => $user->id,
-                'book_id' => $bookId,
-            ]);
-            
-            throw new \Exception('AI service error: ' . $response->status() . ' - ' . $response->body());
-            }
+        $data = $this->callGeminiApi($prompt, [], $context);
 
-            $data = $response->json();
-        
-        // Log full response for debugging
         Log::info('Gemini API task suggestions response', ['response' => $data]);
-        
-        // Check if response has candidates
-        if (!isset($data['candidates']) || empty($data['candidates'])) {
-            Log::error('Gemini API empty candidates', [
-                'response' => $data,
-                'user_id' => $user->id,
-                'book_id' => $bookId,
-            ]);
-            throw new \Exception('AI service returned no response. Please try again.');
-        }
-        
-        $candidate = $data['candidates'][0] ?? null;
-        if (!$candidate) {
-            Log::error('Gemini API no candidate in response', [
-                'response' => $data,
-                'user_id' => $user->id,
-                'book_id' => $bookId,
-            ]);
-            throw new \Exception('AI service returned no response. Please try again.');
-        }
-        
-        // Log raw candidate structure for debugging
-        Log::debug('Gemini API candidate structure', [
-            'candidate' => $candidate,
-            'user_id' => $user->id,
-            'book_id' => $bookId,
-        ]);
-        
-        // Check finish reason - handle different cases
-        $finishReason = $candidate['finishReason'] ?? null;
-        if ($finishReason && $finishReason !== 'STOP') {
-            if ($finishReason === 'SAFETY') {
-                Log::warning('Gemini API task suggestions blocked by safety filters', [
-                    'finish_reason' => $finishReason,
-                    'user_id' => $user->id,
-                    'book_id' => $bookId,
-                ]);
-                throw new \Exception('AI response was blocked by safety filters. Please try rephrasing your request.');
-            } elseif ($finishReason === 'MAX_TOKENS') {
-                Log::warning('Gemini API task suggestions hit token limit', [
-                    'finish_reason' => $finishReason,
-                    'user_id' => $user->id,
-                    'book_id' => $bookId,
-                ]);
-                // Still try to use the partial response
-                // Don't throw, just log and continue
-            } else {
-                Log::warning('Gemini API task suggestions ended with non-STOP reason', [
-                    'finish_reason' => $finishReason,
-                    'user_id' => $user->id,
-                    'book_id' => $bookId,
-                ]);
-                // For other reasons, try to use the response anyway
-            }
-        }
-        
-        // Try to extract text from response - check multiple possible locations
-        $reply = '';
-        
-        // Path 1: Standard structure - content.parts[0].text
-        if (!empty($candidate['content']['parts'][0]['text'])) {
-            $reply = $candidate['content']['parts'][0]['text'];
-        }
-        // Path 2: Alternative structure - content.parts[0] as string
-        elseif (!empty($candidate['content']['parts'][0]) && is_string($candidate['content']['parts'][0])) {
-            $reply = $candidate['content']['parts'][0];
-        }
-        // Path 3: Direct output field
-        elseif (!empty($candidate['output'])) {
-            $reply = $candidate['output'];
-        }
-        // Path 4: content.parts[0] as object with text property
-        elseif (!empty($candidate['content']['parts'][0])) {
-            $part = $candidate['content']['parts'][0];
-            if (is_array($part) && isset($part['text'])) {
-                $reply = $part['text'];
-            }
-        }
-        // Path 5: content.text (direct text field)
-        elseif (!empty($candidate['content']['text'])) {
-            $reply = $candidate['content']['text'];
-        }
-        // Path 6: text field at root level
-        elseif (!empty($candidate['text'])) {
-            $reply = $candidate['text'];
-        }
 
-        // If still empty, log and return a graceful fallback
-        if (empty($reply)) {
+        try {
+            $reply = $this->extractTextFromResponse($data, $context);
+        } catch (\Exception $e) {
             Log::error('Gemini API empty reply - could not extract text from any known path', [
-                'candidate' => $candidate,
                 'response' => $data,
                 'user_id' => $user->id,
                 'book_id' => $bookId,
             ]);
-            
-            // Return a helpful message instead of throwing
+
             return [
                 'reply' => "No tasks could be generated for this book. Please try rephrasing your request or try again later.",
                 'book_id' => $bookId,
@@ -435,36 +156,29 @@ class GeminiAIService
 
         // Construct the prompt
         $prompt = "Based on the following user context, suggest 5 books that would be helpful for them. \n\n";
-        
+
         if (!empty($tasks)) {
             $prompt .= "Current Tasks:\n- " . implode("\n- ", $tasks) . "\n\n";
         }
-        
+
         if (!empty($habits)) {
             $prompt .= "Current Habits:\n- " . implode("\n- ", $habits) . "\n\n";
         }
-        
+
         $prompt .= "Please provide the suggestions in JSON format with the following structure for each book:\n";
         $prompt .= "[{ \"title\": \"Book Title\", \"author\": \"Author Name\", \"reason\": \"Why this book is recommended based on their tasks/habits\" }]";
 
-        // Make API request
-        $url = "{$this->baseUrl}/models/{$this->model}:generateContent?key={$this->apiKey}";
-        
+        $generationConfig = [
+            'temperature' => 0.7,
+            'maxOutputTokens' => 2048,
+            'responseMimeType' => 'application/json',
+        ];
+
         $response = Http::timeout(30)
             ->withHeaders(['Content-Type' => 'application/json'])
-            ->post($url, [
-                'contents' => [
-                    [
-                        'parts' => [
-                            ['text' => $prompt]
-                        ]
-                    ]
-                ],
-                'generationConfig' => [
-                    'temperature' => 0.7,
-                    'maxOutputTokens' => 2048,
-                    'responseMimeType' => 'application/json',
-                ],
+            ->post("{$this->baseUrl}/models/{$this->model}:generateContent?key={$this->apiKey}", [
+                'contents' => [['parts' => [['text' => $prompt]]]],
+                'generationConfig' => $generationConfig,
             ]);
 
         if (!$response->successful()) {
@@ -477,7 +191,7 @@ class GeminiAIService
         }
 
         $data = $response->json();
-        
+
         // Extract text
         $reply = '';
         if (!empty($data['candidates'][0]['content']['parts'][0]['text'])) {
@@ -489,16 +203,143 @@ class GeminiAIService
             // Clean up potential markdown code blocks if present
             $jsonStr = preg_replace('/^```json\s*|\s*```$/', '', trim($reply));
             $suggestions = json_decode($jsonStr, true);
-            
+
             if (!is_array($suggestions)) {
                 throw new \Exception('Invalid JSON format');
             }
-            
+
             return $suggestions;
         } catch (\Exception $e) {
             Log::error('Failed to parse book suggestions JSON', ['reply' => $reply, 'error' => $e->getMessage()]);
             // Fallback or empty array
             return [];
         }
+    }
+
+    /**
+     * Make a request to the Gemini API and return the decoded response body.
+     *
+     * @param  array<string, mixed>  $generationConfig  Extra generation config overrides.
+     * @param  array<string, mixed>  $context  Log context (e.g. user_id, book_id).
+     * @return array<string, mixed>
+     */
+    private function callGeminiApi(string $prompt, array $generationConfig = [], array $context = []): array
+    {
+        $url = "{$this->baseUrl}/models/{$this->model}:generateContent?key={$this->apiKey}";
+
+        $response = Http::timeout(30)
+            ->withHeaders(['Content-Type' => 'application/json'])
+            ->post($url, [
+                'contents' => [['parts' => [['text' => $prompt]]]],
+                'generationConfig' => array_merge([
+                    'temperature' => 0.7,
+                    'maxOutputTokens' => 2048,
+                ], $generationConfig),
+                'safetySettings' => [
+                    ['category' => 'HARM_CATEGORY_HARASSMENT',        'threshold' => 'BLOCK_NONE'],
+                    ['category' => 'HARM_CATEGORY_HATE_SPEECH',       'threshold' => 'BLOCK_NONE'],
+                    ['category' => 'HARM_CATEGORY_SEXUALLY_EXPLICIT', 'threshold' => 'BLOCK_NONE'],
+                    ['category' => 'HARM_CATEGORY_DANGEROUS_CONTENT', 'threshold' => 'BLOCK_NONE'],
+                ],
+            ]);
+
+        if (!$response->successful()) {
+            Log::error('Gemini API error', array_merge($context, [
+                'status' => $response->status(),
+                'response' => $response->body(),
+            ]));
+
+            throw new \Exception('AI service error: ' . $response->status() . ' - ' . $response->body());
+        }
+
+        return $response->json();
+    }
+
+    /**
+     * Extract the text reply from a Gemini API response array.
+     *
+     * Handles finish-reason logging and throws on unrecoverable errors.
+     *
+     * @param  array<string, mixed>  $data     Decoded Gemini API response.
+     * @param  array<string, mixed>  $context  Log context (e.g. user_id, book_id).
+     * @return string
+     */
+    private function extractTextFromResponse(array $data, array $context = []): string
+    {
+        if (empty($data['candidates'])) {
+            Log::error('Gemini API empty candidates', array_merge($context, ['response' => $data]));
+            throw new \Exception('AI service returned no response. Please try again.');
+        }
+
+        $candidate = $data['candidates'][0] ?? null;
+        if (!$candidate) {
+            Log::error('Gemini API no candidate in response', array_merge($context, ['response' => $data]));
+            throw new \Exception('AI service returned no response. Please try again.');
+        }
+
+        Log::debug('Gemini API candidate structure', array_merge($context, ['candidate' => $candidate]));
+
+        $finishReason = $candidate['finishReason'] ?? null;
+        if ($finishReason && $finishReason !== 'STOP') {
+            if ($finishReason === 'SAFETY') {
+                Log::warning('Gemini API response blocked by safety filters', array_merge($context, ['finish_reason' => $finishReason]));
+                throw new \Exception('AI response was blocked by safety filters. Please try rephrasing your request.');
+            } elseif ($finishReason === 'MAX_TOKENS') {
+                Log::warning('Gemini API response hit token limit', array_merge($context, ['finish_reason' => $finishReason]));
+                // Still try to use the partial response if available
+            } else {
+                Log::warning('Gemini API response ended with non-STOP reason', array_merge($context, ['finish_reason' => $finishReason]));
+                // For other reasons, try to use the response anyway
+            }
+        }
+
+        // Try to extract text from response - check multiple possible locations
+        $reply = '';
+
+        // Path 1: Standard structure - content.parts[0].text
+        if (!empty($candidate['content']['parts'][0]['text'])) {
+            $reply = $candidate['content']['parts'][0]['text'];
+        }
+        // Path 2: Alternative structure - content.parts[0] as string
+        elseif (!empty($candidate['content']['parts'][0]) && is_string($candidate['content']['parts'][0])) {
+            $reply = $candidate['content']['parts'][0];
+        }
+        // Path 3: Direct output field
+        elseif (!empty($candidate['output'])) {
+            $reply = $candidate['output'];
+        }
+        // Path 4: content.parts[0] as object with text property
+        elseif (!empty($candidate['content']['parts'][0])) {
+            $part = $candidate['content']['parts'][0];
+            if (is_array($part) && isset($part['text'])) {
+                $reply = $part['text'];
+            }
+        }
+        // Path 5: content.text (direct text field)
+        elseif (!empty($candidate['content']['text'])) {
+            $reply = $candidate['content']['text'];
+        }
+        // Path 6: text field at root level
+        elseif (!empty($candidate['text'])) {
+            $reply = $candidate['text'];
+        }
+
+        if (empty($reply)) {
+            if ($finishReason === 'MAX_TOKENS') {
+                Log::error('Gemini API empty reply due to token limit', array_merge($context, [
+                    'candidate' => $candidate,
+                    'response' => $data,
+                ]));
+                throw new \Exception('AI response exceeded token limit. The prompt may be too long. Please try simplifying your request.');
+            }
+
+            Log::error('Gemini API empty reply - could not extract text from any known path', array_merge($context, [
+                'candidate' => $candidate,
+                'response' => $data,
+            ]));
+            throw new \Exception('AI service returned empty response. Please try again.');
+        }
+
+        return $reply;
     }
 }
