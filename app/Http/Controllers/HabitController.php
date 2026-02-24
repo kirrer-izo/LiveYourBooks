@@ -46,10 +46,7 @@ class HabitController extends Controller
         });
         
         // Get books for filter dropdown
-        $books = Book::where('user_id', Auth::id())
-                    ->select('id', 'title', 'author')
-                    ->orderBy('title')
-                    ->get();
+        $books = $this->getUserBooks();
         
         return inertia('Habits/Index', [
             'habits' => $habits,
@@ -63,10 +60,7 @@ class HabitController extends Controller
      */
     public function create()
     {        
-        $books = Book::where('user_id', Auth::id())
-                    ->select('id', 'title', 'author')
-                    ->orderBy('title')
-                    ->get();
+        $books = $this->getUserBooks();
         
         $tasks = Task::where('user_id', Auth::id())
                     ->select('id', 'title')
@@ -148,10 +142,7 @@ class HabitController extends Controller
     {
         $this->authorize('update', $habit);
         
-        $books = Book::where('user_id', Auth::id())
-                    ->select('id', 'title', 'author')
-                    ->orderBy('title')
-                    ->get();
+        $books = $this->getUserBooks();
         
         return inertia('Habits/Edit', [
             'habit' => $habit,
@@ -184,6 +175,17 @@ class HabitController extends Controller
         
         return redirect()->route('habits.index')
             ->with('success', 'Habit deleted successfully!');
+    }
+
+    /**
+     * Get the authenticated user's books for use in dropdowns.
+     */
+    private function getUserBooks()
+    {
+        return Book::where('user_id', Auth::id())
+            ->select('id', 'title', 'author')
+            ->orderBy('title')
+            ->get();
     }
 
     /**
