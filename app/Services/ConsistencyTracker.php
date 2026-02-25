@@ -15,12 +15,21 @@ class ConsistencyTracker
         $endDate = now();
         $startDate = $endDate->copy()->subDays($days);
 
+        // Compute these once and reuse – avoids re-running the same DB queries
+        // inside calculateOverallConsistencyScore().
+        $habitConsistency  = $this->calculateHabitConsistency($user, $startDate, $endDate);
+        $taskCompletionRate = $this->calculateTaskCompletionRate($user, $startDate, $endDate);
+
+        $habitScore = collect($habitConsistency)->avg('consistency_rate') ?? 0;
+        $taskScore  = $taskCompletionRate['overall_rate'];
+        $consistencyScore = min(100, max(0, (int) round(($habitScore * 0.6) + ($taskScore * 0.4))));
+
         return [
-            'habit_consistency' => $this->calculateHabitConsistency($user, $startDate, $endDate),
-            'task_completion_rate' => $this->calculateTaskCompletionRate($user, $startDate, $endDate),
-            'streak_analysis' => $this->analyzeStreaks($user, $startDate, $endDate),
-            'growth_trends' => $this->calculateGrowthTrends($user, $startDate, $endDate),
-            'consistency_score' => $this->calculateOverallConsistencyScore($user, $startDate, $endDate),
+            'habit_consistency'    => $habitConsistency,
+            'task_completion_rate' => $taskCompletionRate,
+            'streak_analysis'      => $this->analyzeStreaks($user, $startDate, $endDate),
+            'growth_trends'        => $this->calculateGrowthTrends($user, $startDate, $endDate),
+            'consistency_score'    => $consistencyScore,
         ];
     }
 
@@ -112,6 +121,11 @@ class ConsistencyTracker
 
     public function calculateGrowthTrends(User $user, Carbon $startDate, Carbon $endDate): array
     {
+        // Load habits once outside the loop to avoid one DB query per week iteration.
+        $habits = Habit::where('user_id', $user->id)
+            ->where('is_active', true)
+            ->get();
+
         $weeks = $startDate->diffInWeeks($endDate);
         $weeklyData = [];
 
@@ -123,7 +137,7 @@ class ConsistencyTracker
                 'week' => $i + 1,
                 'start_date' => $weekStart->format('Y-m-d'),
                 'end_date' => $weekEnd->format('Y-m-d'),
-                'habit_consistency' => $this->calculateWeeklyHabitConsistency($user, $weekStart, $weekEnd),
+                'habit_consistency' => $this->calculateWeeklyHabitConsistency($habits, $weekStart, $weekEnd),
                 'task_completion' => $this->calculateWeeklyTaskCompletion($user, $weekStart, $weekEnd),
             ];
         }
@@ -152,17 +166,10 @@ class ConsistencyTracker
 
     private function getHabitCompletionDays(Habit $habit, Carbon $startDate, Carbon $endDate): Collection
     {
-        $completionDays = collect();
-        $current = $startDate->copy();
-
-        while ($current->lte($endDate)) {
-            if ($habit->last_completed && $habit->last_completed->isSameDay($current)) {
-                $completionDays->push($current->format('Y-m-d'));
-            }
-            $current->addDay();
-        }
-
-        return $completionDays;
+        return $habit->completions()
+            ->whereBetween('completed_at', [$startDate->toDateString(), $endDate->toDateString()])
+            ->pluck('completed_at')
+            ->map(fn ($date) => $date->format('Y-m-d'));
     }
 
     private function calculateCurrentStreak(Habit $habit): int
@@ -247,11 +254,8 @@ class ConsistencyTracker
         }
     }
 
-    private function calculateWeeklyHabitConsistency(User $user, Carbon $startDate, Carbon $endDate): float
+    private function calculateWeeklyHabitConsistency(Collection $habits, Carbon $startDate, Carbon $endDate): float
     {
-        $habits = Habit::where('user_id', $user->id)
-            ->where('is_active', true)
-            ->get();
 
         if ($habits->isEmpty()) {
             return 0;

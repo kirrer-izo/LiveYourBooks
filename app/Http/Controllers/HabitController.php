@@ -124,14 +124,21 @@ class HabitController extends Controller
         $habit->streak_status = $habit->getStreakStatus();
         $habit->completed_today = $habit->isCompletedToday();
         
-        // Get last 30 days of completion data for calendar view
+        // Get last 30 days of completion data for calendar view using the
+        // habit_completions table so the full history is reflected correctly.
+        $completedDates = $habit->completions()
+            ->where('completed_at', '>=', now()->subDays(29)->toDateString())
+            ->pluck('completed_at')
+            ->map(fn ($date) => $date->format('Y-m-d'))
+            ->flip()
+            ->all();
+
         $completionData = [];
         for ($i = 29; $i >= 0; $i--) {
-            $date = now()->subDays($i);
-            $completed = $habit->last_completed && $habit->last_completed->gte($date->startOfDay()) && $habit->last_completed->lte($date->endOfDay());
+            $date = now()->subDays($i)->toDateString();
             $completionData[] = [
-                'date' => $date->toDateString(),
-                'completed' => $completed,
+                'date'      => $date,
+                'completed' => isset($completedDates[$date]),
             ];
         }
         

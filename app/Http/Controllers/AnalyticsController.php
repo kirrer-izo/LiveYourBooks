@@ -16,11 +16,15 @@ class AnalyticsController extends Controller
     {
         $userId = Auth::id();
 
-        // Books statistics
+        // Books statistics – single aggregated query instead of three separate COUNT queries
+        $bookCounts = Book::where('user_id', $userId)
+            ->selectRaw('COUNT(*) as total, SUM(CASE WHEN is_completed = 1 THEN 1 ELSE 0 END) as completed, SUM(CASE WHEN is_completed = 0 THEN 1 ELSE 0 END) as in_progress')
+            ->first();
+
         $booksStats = [
-            'total' => (int) Book::where('user_id', $userId)->count(),
-            'completed' => (int) Book::where('user_id', $userId)->where('is_completed', true)->count(),
-            'in_progress' => (int) Book::where('user_id', $userId)->where('is_completed', false)->count(),
+            'total'      => (int) ($bookCounts->total ?? 0),
+            'completed'  => (int) ($bookCounts->completed ?? 0),
+            'in_progress'=> (int) ($bookCounts->in_progress ?? 0),
         ];
 
         // Habit consistency: derive a simple percentage from last_completed recency and streak

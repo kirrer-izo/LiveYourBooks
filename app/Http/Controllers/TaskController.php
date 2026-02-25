@@ -99,8 +99,8 @@ class TaskController extends Controller
     {
         
         return inertia('Tasks/Create', [
-            'books' => Book::all(['id','title']),
-            'habits' => Habit::all(['id','name']),
+            'books' => Book::where('user_id', Auth::id())->select('id', 'title')->orderBy('title')->get(),
+            'habits' => Habit::where('user_id', Auth::id())->select('id', 'name')->orderBy('name')->get(),
         ]);
     }
 
